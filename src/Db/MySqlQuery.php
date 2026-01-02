@@ -9,7 +9,7 @@ use Roslov\MigrationChecker\Contract\QueryInterface;
 use Roslov\MigrationChecker\Exception\PdoNotFoundException;
 
 /**
- * Fetches data from MySQL.
+ * Fetches data from MySQL via PDO connection.
  */
 final class MySqlQuery implements QueryInterface
 {

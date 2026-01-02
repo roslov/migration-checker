@@ -181,6 +181,6 @@ final class MySqlDump implements DumpInterface
      */
     private function removeAutoIncrement(string $sql): string
     {
-        return preg_replace('/\s+AUTO_INCREMENT *= *\d+\s+/i', "\n", $sql);
+        return preg_replace('/\s+AUTO_INCREMENT *= *\d+(\s+)/i', '$1', $sql);
     }
 }

@@ -66,7 +66,8 @@ final class MySqlDump implements DumpInterface
         $dump = [];
         foreach ($tablesAndViews as $row) {
             $sql = sprintf('SHOW CREATE TABLE `%s`', $row['table_name']);
-            $dump[] = $this->dumpRow($this->query->execute($sql)[0] ?? []);
+            $rowDump = $this->dumpRow($this->query->execute($sql)[0] ?? []);
+            $dump[] = $this->removeAutoIncrement($rowDump);
         }
 
         return implode("\n\n", $dump);
@@ -169,5 +170,17 @@ final class MySqlDump implements DumpInterface
         }
 
         return implode("\n", $dump);
+    }
+
+    /**
+     * Removes the auto-increment property from a given row dump.
+     *
+     * @param string $sql The SQL dump of a database row
+     *
+     * @return string The modified row dump with the auto-increment property removed
+     */
+    private function removeAutoIncrement(string $sql): string
+    {
+        return preg_replace('/\s+AUTO_INCREMENT *= *\d+\s+/i', "\n", $sql);
     }
 }

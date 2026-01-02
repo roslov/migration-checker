@@ -1,0 +1,173 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Roslov\MigrationChecker\Db;
+
+use Roslov\MigrationChecker\Contract\DumpInterface;
+use Roslov\MigrationChecker\Contract\QueryInterface;
+use Roslov\MigrationChecker\Contract\StateInterface;
+use Roslov\MigrationChecker\Exception\NoDatabaseUsedException;
+
+/**
+ * Fetches the MySQL dump.
+ */
+final class MySqlDump implements DumpInterface
+{
+    /**
+     * Constructor.
+     *
+     * @param QueryInterface $query Query fetcher
+     */
+    public function __construct(private readonly QueryInterface $query)
+    {
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getDump(): StateInterface
+    {
+        $tablesAndViews = $this->getTableAndViewDump();
+        $triggers = $this->getTriggerDump();
+        $proceduresAndFunctions = $this->getProcedureAndFunctionDump();
+        $events = $this->getEventDump();
+        $dump = <<<DUMP
+            -- ### Tables and views ###
+            $tablesAndViews
+
+            -- ### Triggers ###
+            $triggers
+
+            -- ### Procedures and functions ###
+            $proceduresAndFunctions
+
+            -- ### Events ###
+            $events
+            DUMP;
+
+        return new State($dump);
+    }
+
+    /**
+     * Dumps tables and views.
+     *
+     * @return string The dumped tables and views
+     */
+    private function getTableAndViewDump(): string
+    {
+        $sql = <<<'SQL'
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = :dbName
+            ORDER BY table_name;
+            SQL;
+        $tablesAndViews = $this->query->execute($sql, ['dbName' => $this->getDbName()]);
+        $dump = [];
+        foreach ($tablesAndViews as $row) {
+            $sql = sprintf('SHOW CREATE TABLE `%s`', $row['table_name']);
+            $dump[] = $this->dumpRow($this->query->execute($sql)[0] ?? []);
+        }
+
+        return implode("\n\n", $dump);
+    }
+
+    /**
+     * Dumps triggers.
+     *
+     * @return string The dumped triggers
+     */
+    private function getTriggerDump(): string
+    {
+        $sql = <<<'SQL'
+            SELECT trigger_name, event_object_table
+            FROM information_schema.triggers
+            WHERE trigger_schema = :dbName
+            ORDER BY trigger_name, event_object_table;
+            SQL;
+        $triggers = $this->query->execute($sql, ['dbName' => $this->getDbName()]);
+        $dump = [];
+        foreach ($triggers as $row) {
+            $sql = sprintf('SHOW CREATE TRIGGER `%s`', $row['trigger_name']);
+            $dump[] = $this->dumpRow($this->query->execute($sql)[0] ?? []);
+        }
+
+        return implode("\n\n", $dump);
+    }
+
+    /**
+     * Dumps procedures and functions.
+     *
+     * @return string The dumped procedures and functions
+     */
+    private function getProcedureAndFunctionDump(): string
+    {
+        $sql = <<<'SQL'
+            SELECT routine_type, routine_name
+            FROM information_schema.routines
+            WHERE routine_schema = :dbName
+            ORDER BY routine_type, routine_name;
+            SQL;
+        $procedureFunctions = $this->query->execute($sql, ['dbName' => $this->getDbName()]);
+        $dump = [];
+        foreach ($procedureFunctions as $row) {
+            $sql = sprintf('SHOW CREATE %s `%s`', $row['routine_type'], $row['routine_name']);
+            $dump[] = $this->dumpRow($this->query->execute($sql)[0] ?? []);
+        }
+
+        return implode("\n\n", $dump);
+    }
+
+    /**
+     * Dumps events.
+     *
+     * @return string The dumped events
+     */
+    private function getEventDump(): string
+    {
+        $sql = <<<'SQL'
+            SELECT event_name, event_definition, status
+            FROM information_schema.events
+            WHERE event_schema = :dbName
+            ORDER BY event_name, event_definition, status;
+            SQL;
+        $events = $this->query->execute($sql, ['dbName' => $this->getDbName()]);
+        $dump = [];
+        foreach ($events as $row) {
+            $sql = sprintf('SHOW CREATE EVENT `%s`', $row['event_name']);
+            $dump[] = $this->dumpRow($this->query->execute($sql)[0] ?? []);
+        }
+
+        return implode("\n\n", $dump);
+    }
+
+    /**
+     * Returns the current database name.
+     *
+     * @throws NoDatabaseUsedException If no database is used
+     */
+    private function getDbName(): string
+    {
+        $row = $this->query->execute('SELECT DATABASE()')[0]
+        ?? throw new NoDatabaseUsedException('Use a database first.');
+
+        return reset($row) ?: throw new NoDatabaseUsedException('Cannot get the database name.');
+    }
+
+    /**
+     * Dumps the row into a string representation.
+     *
+     * @param array<string, scalar> $row The row from the query result
+     *
+     * @return string The dump of the row
+     */
+    private function dumpRow(array $row): string
+    {
+        $dump = [];
+        foreach ($row as $field => $value) {
+            $dump[] = "$field: $value\n";
+        }
+
+        return implode("\n", $dump);
+    }
+}

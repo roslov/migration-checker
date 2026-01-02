@@ -12,5 +12,5 @@ interface StateInterface
     /**
      * Converts the state to a string representation.
      */
-    public function convertToString(): string;
+    public function toString(): string;
 }

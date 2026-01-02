@@ -17,5 +17,5 @@ interface EnvironmentInterface
     /**
      * Cleans up the environment after migration checks.
      */
-    public function cleanup(): void;
+    public function cleanUp(): void;
 }

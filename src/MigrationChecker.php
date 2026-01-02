@@ -75,7 +75,7 @@ final class MigrationChecker
         }
 
         $this->logger->info('Cleaning up migration environment...');
-        $this->environment->cleanup();
+        $this->environment->cleanUp();
         $this->logger->info('Migration check completed successfully.');
     }
 

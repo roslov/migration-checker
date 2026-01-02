@@ -14,6 +14,12 @@ different frameworks or ORMs.
 - PHP 8.1 or higher.
 
 
+## Limitations
+
+The built-in class `\Roslov\MigrationChecker\Db\MySqlDump` currently supports MySQL/MariaDB only.
+If you need to support other databases, you have to write your own dumper.
+
+
 ## Installation
 
 The package could be installed with composer:
@@ -28,6 +34,7 @@ composer require --dev roslov/migration-checker
 Below, there is an example of usage with the Symfony framework.
 
 Install [sebastian/diff](https://github.com/sebastianbergmann/diff) if not installed:
+
 ```shell
 composer require --dev sebastian/diff
 ```
@@ -306,7 +313,7 @@ final class Printer implements PrinterInterface
 Now, you can run the command to check your migrations:
 
 ```shell
-docker compose exec site bin/console app:check-migrations --env=test -vv
+bin/console app:check-migrations --env=test -vv
 ```
 
 Be careful to run it in the test environment, otherwise you can damage your data.

@@ -28,13 +28,17 @@ final class MySqlDump implements DumpInterface
      */
     public function getDump(): StateInterface
     {
-        $tablesAndViews = $this->getTableAndViewDump();
+        $tables = $this->getTableDump();
+        $views = $this->getViewDump();
         $triggers = $this->getTriggerDump();
         $proceduresAndFunctions = $this->getProcedureAndFunctionDump();
         $events = $this->getEventDump();
         $dump = <<<DUMP
-            -- ### Tables and views ###
-            $tablesAndViews
+            -- ### Tables ###
+            $tables
+
+            -- ### Views ###
+            $views
 
             -- ### Triggers ###
             $triggers
@@ -50,24 +54,47 @@ final class MySqlDump implements DumpInterface
     }
 
     /**
-     * Dumps tables and views.
+     * Dumps tables.
      *
-     * @return string The dumped tables and views
+     * @return string The dumped tables
      */
-    private function getTableAndViewDump(): string
+    private function getTableDump(): string
     {
         $sql = <<<'SQL'
-            SELECT table_name
+            SELECT table_name, table_type
             FROM information_schema.tables
-            WHERE table_schema = :dbName
+            WHERE table_schema = :dbName AND TABLE_TYPE = 'BASE TABLE'
             ORDER BY table_name;
             SQL;
-        $tablesAndViews = $this->query->execute($sql, ['dbName' => $this->getDbName()]);
+        $tables = $this->query->execute($sql, ['dbName' => $this->getDbName()]);
         $dump = [];
-        foreach ($tablesAndViews as $row) {
+        foreach ($tables as $row) {
             $sql = sprintf('SHOW CREATE TABLE `%s`', $row['table_name']);
             $rowDump = $this->dumpRow($this->query->execute($sql)[0] ?? []);
             $dump[] = $this->removeAutoIncrement($rowDump);
+        }
+
+        return implode("\n\n", $dump);
+    }
+
+    /**
+     * Dumps views.
+     *
+     * @return string The dumped views
+     */
+    private function getViewDump(): string
+    {
+        $sql = <<<'SQL'
+            SELECT table_name, table_type
+            FROM information_schema.tables
+            WHERE table_schema = :dbName AND TABLE_TYPE = 'VIEW'
+            ORDER BY table_name;
+            SQL;
+        $views = $this->query->execute($sql, ['dbName' => $this->getDbName()]);
+        $dump = [];
+        foreach ($views as $row) {
+            $sql = sprintf('SHOW CREATE VIEW `%s`', $row['table_name']);
+            $dump[] = $this->dumpRow($this->query->execute($sql)[0] ?? []);
         }
 
         return implode("\n\n", $dump);

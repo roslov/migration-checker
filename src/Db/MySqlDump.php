@@ -7,6 +7,7 @@ namespace Roslov\MigrationChecker\Db;
 use Roslov\MigrationChecker\Contract\DumpInterface;
 use Roslov\MigrationChecker\Contract\QueryInterface;
 use Roslov\MigrationChecker\Contract\StateInterface;
+use Roslov\MigrationChecker\Db\Helper\MySqlDdlCanonicalizer;
 use Roslov\MigrationChecker\Exception\NoDatabaseUsedException;
 
 /**
@@ -70,7 +71,11 @@ final class MySqlDump implements DumpInterface
         $dump = [];
         foreach ($tables as $row) {
             $sql = sprintf('SHOW CREATE TABLE `%s`', $row['table_name']);
-            $rowDump = $this->dumpRow($this->query->execute($sql)[0] ?? []);
+            $entry = $this->query->execute($sql)[0] ?? [];
+            if (isset($entry['Create Table'])) {
+                $entry['Create Table'] = $this->canonicalizeCreateTable($entry['Create Table']);
+            }
+            $rowDump = $this->dumpRow($entry);
             $dump[] = $this->removeAutoIncrement($rowDump);
         }
 
@@ -209,5 +214,17 @@ final class MySqlDump implements DumpInterface
     private function removeAutoIncrement(string $sql): string
     {
         return preg_replace('/\s+AUTO_INCREMENT *= *\d+(\s+)/i', '$1', $sql);
+    }
+
+    /**
+     * Canonicalizes the CREATE TABLE query.
+     *
+     * @param string $sql The CREATE TABLE query
+     *
+     * @return string The canonized CREATE TABLE query
+     */
+    private function canonicalizeCreateTable(string $sql): string
+    {
+        return (new MySqlDdlCanonicalizer())->canonicalizeCreateTable($sql);
     }
 }

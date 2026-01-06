@@ -202,7 +202,7 @@ final class MySqlDump implements DumpInterface
     {
         $dump = [];
         foreach ($row as $field => $value) {
-            $dump[] = "--- $field:\n$value\n";
+            $dump[] = "-- $field:\n$value\n";
         }
 
         return implode("\n", $dump);

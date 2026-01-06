@@ -122,7 +122,11 @@ final class MySqlDump implements DumpInterface
         $dump = [];
         foreach ($triggers as $row) {
             $sql = sprintf('SHOW CREATE TRIGGER `%s`', $row['trigger_name']);
-            $dump[] = $this->dumpRow($this->query->execute($sql)[0] ?? []);
+            $entry = $this->query->execute($sql)[0] ?? [];
+            if (isset($entry['Created'])) {
+                unset($entry['Created']);
+            }
+            $dump[] = $this->dumpRow($entry);
         }
 
         return implode("\n\n", $dump);

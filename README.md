@@ -360,9 +360,11 @@ The output example of the failed run:
  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 
 
-+Table: event
++-- Table:
++event
 +
-+Create Table: CREATE TABLE `event` (
++-- Create Table:
++CREATE TABLE `event` (
 +  `id` bigint(20) NOT NULL AUTO_INCREMENT,
 +  `microtime` double(16,6) NOT NULL COMMENT 'Unix timestamp with microseconds',
 +  `producer_name` varchar(64) NOT NULL COMMENT 'Producer name',

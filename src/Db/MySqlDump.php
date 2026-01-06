@@ -62,7 +62,7 @@ final class MySqlDump implements DumpInterface
     private function getTableDump(): string
     {
         $sql = <<<'SQL'
-            SELECT table_name, table_type
+            SELECT table_name AS table_name, table_type AS table_type
             FROM information_schema.tables
             WHERE table_schema = :dbName AND TABLE_TYPE = 'BASE TABLE'
             ORDER BY table_name;
@@ -90,7 +90,7 @@ final class MySqlDump implements DumpInterface
     private function getViewDump(): string
     {
         $sql = <<<'SQL'
-            SELECT table_name, table_type
+            SELECT table_name AS table_name, table_type AS table_type
             FROM information_schema.tables
             WHERE table_schema = :dbName AND TABLE_TYPE = 'VIEW'
             ORDER BY table_name;
@@ -113,7 +113,7 @@ final class MySqlDump implements DumpInterface
     private function getTriggerDump(): string
     {
         $sql = <<<'SQL'
-            SELECT trigger_name, event_object_table
+            SELECT trigger_name AS trigger_name, event_object_table AS event_object_table
             FROM information_schema.triggers
             WHERE trigger_schema = :dbName
             ORDER BY trigger_name, event_object_table;
@@ -140,7 +140,7 @@ final class MySqlDump implements DumpInterface
     private function getProcedureAndFunctionDump(): string
     {
         $sql = <<<'SQL'
-            SELECT routine_type, routine_name
+            SELECT routine_type AS routine_type, routine_name AS routine_name
             FROM information_schema.routines
             WHERE routine_schema = :dbName
             ORDER BY routine_type, routine_name;
@@ -163,7 +163,7 @@ final class MySqlDump implements DumpInterface
     private function getEventDump(): string
     {
         $sql = <<<'SQL'
-            SELECT event_name, event_definition, status
+            SELECT event_name AS event_name, event_definition AS event_definition, status AS status
             FROM information_schema.events
             WHERE event_schema = :dbName
             ORDER BY event_name, event_definition, status;

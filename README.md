@@ -1,12 +1,13 @@
 Database Migration Checker
 ==========================
 
-This package validates database migrations. It checks whether all up and down migrations run without errors.
+Database Migration Checker validates your database migrations end-to-end. It runs each migration up and down and
+verifies that the schema after rolling back is identical to the schema before the migration was applied. This helps you
+catch migrations that leave behind tables, columns, indexes, or other schema artifacts.
 
-It also validates that down migrations revert all changes, so there is no diff in the database after running them.
-
-This package contains the main algorithm and some helpers. You can implement its interfaces and helpers to be used with
-different frameworks or ORMs.
+The package focuses on the core algorithm and exposes framework-agnostic contracts. You implement a few small interfaces
+to connect it to your ORM or framework, and it will take care of executing migrations, capturing schema state, comparing
+states, and printing readable diffs.
 
 
 ## Requirements
@@ -29,9 +30,39 @@ composer require --dev roslov/migration-checker
 ```
 
 
+## How it works
+
+The checker performs the following loop for each pending migration:
+
+1. Capture the current schema state.
+2. Run the next migration up.
+3. Run the same migration down.
+4. Capture the schema state again.
+5. Compare the two states and fail if any differences are found.
+6. Re-apply the migration up so the next migration can build on it.
+
+If a down migration does not fully revert the changes, the checker prints a unified diff to help you locate the problem.
+
+
+## Core concepts
+
+You connect the checker to your app by implementing these contracts:
+
+- `EnvironmentInterface`: prepare and clean up the environment (ensure metadata tables exist, reset caches, etc.).
+- `MigrationInterface`: apply the next migration up, apply the last migration down, and indicate if more migrations exist.
+- `QueryInterface`: execute queries (used by schema dumpers).
+- `PrinterInterface`: render schema diffs when changes are detected.
+
+The checker ships with MySQL helpers:
+
+- `Db\MySqlDump` uses `information_schema` to dump the schema.
+- `Db\SchemaStateComparer` compares two schema dumps.
+
+
 ## General usage
 
-Below, there is an example of usage with the Symfony framework.
+Below is an example of usage with the Symfony framework and Doctrine Migrations. The key idea is to wire the checker into
+your framework and run it in a safe environment (typically the test database).
 
 Install [sebastian/diff](https://github.com/sebastianbergmann/diff) if not installed:
 
@@ -316,9 +347,17 @@ Now, you can run the command to check your migrations:
 bin/console app:check-migrations --env=test -vv
 ```
 
-Be careful to run it in the test environment, otherwise you can damage your data.
+### Usage tips
 
-Also, ensure that you run this command on an empty database.
+- **Run in a test database only.** The checker applies and rolls back migrations repeatedly.
+- **Use an empty database.** The dump comparer assumes the schema is fully controlled by migrations.
+- **Add it to CI.** Treat a failed check as a build failure so schema regressions are caught early.
+
+Example CI step:
+
+```shell
+bin/console app:check-migrations --env=test -vv
+```
 
 The output example of the successful run:
 ```
@@ -385,6 +424,38 @@ In MigrationChecker.php line 67:
 ```
 
 
+## Custom integration outline
+
+If you are not using Symfony/Doctrine, create a small adapter layer that implements the required interfaces and call the
+checker directly:
+
+```php
+use Psr\Log\NullLogger;
+use Roslov\MigrationChecker\Db\SchemaStateComparer;
+use Roslov\MigrationChecker\MigrationChecker;
+
+$environment = new YourEnvironmentAdapter();
+$migration = new YourMigrationAdapter();
+$query = new YourQueryAdapter();
+$printer = new YourPrinterAdapter();
+
+$dump = new \Roslov\MigrationChecker\Db\MySqlDump($query);
+$comparer = new SchemaStateComparer($dump);
+
+$checker = new MigrationChecker(
+    new NullLogger(),
+    $environment,
+    $migration,
+    $comparer,
+    $printer,
+);
+
+$checker->check();
+```
+
+Replace the adapters with implementations for your framework or ORM.
+
+
 ## Testing
 
 ### Unit testing
@@ -403,4 +474,3 @@ The code style is analyzed with [PHP_CodeSniffer](https://github.com/squizlabs/P
 ```shell
 ./vendor/bin/phpcs --extensions=php --colors --standard=PSR12Ext --ignore=vendor/* -p -s .
 ```
-

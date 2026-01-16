@@ -1,0 +1,81 @@
+on:
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - '.gitignore'
+      - '.gitattributes'
+      - 'infection.json.dist'
+      - 'psalm.xml'
+
+  push:
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - '.gitignore'
+      - '.gitattributes'
+      - 'infection.json.dist'
+      - 'psalm.xml'
+
+name: DB integration tests
+
+jobs:
+  tests:
+    name: PHP ${{ matrix.php }}
+
+    env:
+      key: cache-v1
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        php:
+          - 8.1
+
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Fix Docker socket permissions to run Docker commands from a container
+        run: |
+          # Get the GID of the socket from the host
+          DOCKER_GID=$(stat -c '%g' /var/run/docker.sock)
+
+          # Create group and add user
+          #sudo groupadd -g $DOCKER_GID socket-access || true
+          sudo usermod -aG $DOCKER_GID $(whoami)
+
+          # Execute commands with the new group
+          sg docker "docker ps"
+
+      - name: Store Docker builder cache
+        uses: docker/build-push-action@v6
+        with:
+          context: ./docker
+          file: ./docker/Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: checker:latest
+          target: php-base
+          load: true
+          # cache between workflow runs:
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Install dependencies with Composer
+        run: docker run --rm -v ".:/app" checker composer install
+
+      - name: Run DB integration tests with Codeception
+        run: |
+          docker run --rm \
+            -v ".:/app" \
+            -v "/var/run/docker.sock:/var/run/docker.sock" \
+            --add-host=host.docker.internal:host-gateway \
+            checker \
+            codecept run Db --debug

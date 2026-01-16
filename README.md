@@ -464,15 +464,49 @@ Replace the adapters with implementations for your framework or ORM.
 
 ## Testing
 
-### Unit testing
+Tests are located in `tests` directory.
+They are developed with [Codeception PHP Testing Framework](http://codeception.com/).
 
-The package is tested with [PHPUnit](https://phpunit.de/). To run tests:
-
-```shell
-./vendor/bin/phpunit
+Tests can be executed by running
+```sh
+./vendor/bin/codecept run
 ```
 
-### Code style analysis
+### Running tests
+
+To execute tests, do the following:
+```sh
+# Run all available tests
+codecept run
+# Run unit tests
+codecept run Unit
+# Run only unit and functional tests
+codecept run Unit,Functional
+```
+
+### Creating new tests
+
+To create a new test, run one of the following commands:
+```sh
+codecept g:test Unit UserTest
+codecept g:cest Functional ExampleCest
+```
+
+### Code coverage support
+
+By default, code coverage is disabled until you enable XDebug.
+
+You can run your tests and collect coverage with the following command:
+
+```sh
+# Collect coverage for all tests
+XDEBUG_MODE=coverage codecept run --coverage --coverage-html --coverage-xml
+```
+
+You can see code coverage output under the `tests/_output` directory.
+
+
+## Code style analysis
 
 The code style is analyzed with [PHP_CodeSniffer](https://github.com/squizlabs/PHP_CodeSniffer) and
 [PSR-12 Ext coding standard](https://github.com/roslov/psr12ext). To run code style analysis:

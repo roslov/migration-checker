@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Roslov\MigrationChecker\Tests\Db;
+namespace Roslov\MigrationChecker\Tests\Unit\Db;
 
+use Codeception\Attribute\DataProvider;
+use Codeception\Test\Unit;
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\TestCase;
 use Roslov\MigrationChecker\Contract\QueryInterface;
 use Roslov\MigrationChecker\Db\DatabaseDetector;
 use RuntimeException;
@@ -15,7 +15,7 @@ use RuntimeException;
  * Tests database detector functionality.
  */
 #[CoversClass(DatabaseDetector::class)]
-final class DatabaseDetectorTest extends TestCase
+final class DatabaseDetectorTest extends Unit
 {
     /**
      * Tests database type detection.

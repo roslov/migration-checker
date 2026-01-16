@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Roslov\MigrationChecker\Tests\Db\Helper;
+namespace Roslov\MigrationChecker\Tests\Unit\Db\Helper;
 
+use Codeception\Attribute\DataProvider;
+use Codeception\Test\Unit;
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\TestCase;
 use Roslov\MigrationChecker\Db\Helper\MySqlDdlCanonicalizer;
 
 /**
  * Test canonical table creation conversion.
  */
 #[CoversClass(MySqlDdlCanonicalizer::class)]
-final class MySqlDdlCanonicalizerTest extends TestCase
+final class MySqlDdlCanonicalizerTest extends Unit
 {
     /**
      * Test canonical table creation conversion.

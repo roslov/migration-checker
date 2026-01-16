@@ -472,5 +472,5 @@ The code style is analyzed with [PHP_CodeSniffer](https://github.com/squizlabs/P
 [PSR-12 Ext coding standard](https://github.com/roslov/psr12ext). To run code style analysis:
 
 ```shell
-./vendor/bin/phpcs --extensions=php --colors --standard=PSR12Ext --ignore=vendor/* -p -s .
+./vendor/bin/phpcs --extensions=php --colors --standard=PSR12Ext --runtime-set php_version 80100 --ignore=vendor/* -p -s .
 ```

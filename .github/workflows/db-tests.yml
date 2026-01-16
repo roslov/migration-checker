@@ -22,18 +22,32 @@ on:
 name: DB integration tests
 
 jobs:
-  tests:
-    name: PHP ${{ matrix.php }}
-
-    env:
-      key: cache-v1
-
+  setup:
     runs-on: ubuntu-latest
+    env:
+      shard-count: 3
+    outputs:
+      shards: ${{ steps.set-shards.outputs.shards }}
+      shard-count: ${{ steps.set-shard-count.outputs.shard-count }}
+    steps:
+      - id: set-shards
+        # Generates a JSON array [1, 2, 3, ...]
+        run: echo "shards=$(seq 1 ${{ env.shard-count }} | jq -R . | jq -s -c .)" >> $GITHUB_OUTPUT
+      - id: set-shard-count
+        run: echo "shard-count=${{ env.shard-count }}" >> $GITHUB_OUTPUT
+
+  tests:
+    name: PHP ${{ matrix.php }} Shard ${{ matrix.shard }}
+    needs: setup
+    runs-on: ubuntu-latest
+    env:
+      shard-count: ${{ needs.setup.outputs.shard-count }}
 
     strategy:
       matrix:
         php:
           - 8.1
+        shard: ${{ fromJson(needs.setup.outputs.shards) }}
 
     steps:
       - name: Set up Docker Buildx
@@ -78,4 +92,6 @@ jobs:
             -v "/var/run/docker.sock:/var/run/docker.sock" \
             --add-host=host.docker.internal:host-gateway \
             checker \
-            codecept run Db --debug
+            codecept run Db \
+            --debug \
+            --shard "${{ matrix.shard }}/${{ env.shard-count }}"

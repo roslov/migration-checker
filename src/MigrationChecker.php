@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Roslov\MigrationChecker;
 
 use Psr\Log\LoggerInterface;
+use Roslov\MigrationChecker\Contract\DatabaseDetectorInterface;
 use Roslov\MigrationChecker\Contract\EnvironmentInterface;
 use Roslov\MigrationChecker\Contract\MigrationInterface;
 use Roslov\MigrationChecker\Contract\PrinterInterface;
@@ -25,6 +26,7 @@ final class MigrationChecker
      * @param MigrationInterface $migration Migration handler
      * @param SchemaStateComparerInterface $comparer Database schema comparer
      * @param PrinterInterface $printer Schema difference printer
+     * @param DatabaseDetectorInterface|null $detector Database detector (if needed for debug information)
      */
     public function __construct(
         private readonly LoggerInterface $logger,
@@ -32,6 +34,7 @@ final class MigrationChecker
         private readonly MigrationInterface $migration,
         private readonly SchemaStateComparerInterface $comparer,
         private readonly PrinterInterface $printer,
+        private readonly ?DatabaseDetectorInterface $detector = null,
     ) {
     }
 
@@ -43,6 +46,14 @@ final class MigrationChecker
     public function check(): void
     {
         $this->logger->info('Migration check started.');
+
+        if ($this->detector !== null) {
+            $dbType = $this->detector->getType()->value;
+            $dbVersion = $this->detector->getVersion();
+            $this->logger->info(sprintf('Database type: %s', $dbType));
+            $this->logger->info(sprintf('Database version: %s', $dbVersion ?? 'n/a'));
+        }
+
         $this->logger->info('Preparing migration environment...');
         $this->environment->prepare();
 

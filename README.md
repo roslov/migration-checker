@@ -48,15 +48,21 @@ If a down migration does not fully revert the changes, the checker prints a unif
 
 You connect the checker to your app by implementing these contracts:
 
-- `EnvironmentInterface`: prepare and clean up the environment (ensure metadata tables exist, reset caches, etc.).
-- `MigrationInterface`: apply the next migration up, apply the last migration down, and indicate if more migrations exist.
-- `QueryInterface`: execute queries (used by schema dumpers).
-- `PrinterInterface`: render schema diffs when changes are detected.
+- `\Roslov\MigrationChecker\Contract\EnvironmentInterface`
+    prepares and cleans up the environment (ensure metadata tables exist, reset caches, etc.).
+- `\Roslov\MigrationChecker\Contract\MigrationInterface`
+    applies the next migration up, apply the last migration down, and indicate if more migrations exist.
+- `\Roslov\MigrationChecker\Contract\QueryInterface` executes queries (used by schema dumpers).
+- `\Roslov\MigrationChecker\Contract\PrinterInterface` renders schema diffs when changes are detected.
+- `\Roslov\MigrationChecker\Contract\DatabaseDetectorInterface` _(optional)_ detects database type and version.
 
 The checker ships with MySQL helpers:
 
-- `Db\MySqlDump` uses `information_schema` to dump the schema.
-- `Db\SchemaStateComparer` compares two schema dumps.
+- `\Roslov\MigrationChecker\Db\SchemaStateComparer` compares two schema dumps.
+- `\Roslov\MigrationChecker\Db\Dump` automatically detects the database type and dumps its schema.
+    It uses `\Roslov\MigrationChecker\Db\DatabaseDetector` to determine which schema dumper to use:
+    - `\Roslov\MigrationChecker\Db\MySqlDump` dumps the schema for MySQL or MariaDB.
+- `\Roslov\MigrationChecker\Db\SqlQuery` fetches data from SQL database via PDO connection.
 
 
 ## General usage

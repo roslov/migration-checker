@@ -25,7 +25,7 @@ final class MySqlDdlCanonicalizerTest extends Unit
     public function testCanonicalizeCreateTable(string $originalCreateTable, string $expectedCreateTable): void
     {
         $ddl = new MySqlDdlCanonicalizer();
-        $this->assertEquals($expectedCreateTable, $ddl->canonicalizeCreateTable($originalCreateTable));
+        self::assertEquals($expectedCreateTable, $ddl->canonicalizeCreateTable($originalCreateTable));
     }
 
     /**
@@ -121,18 +121,18 @@ final class MySqlDdlCanonicalizerTest extends Unit
                 <<<'SQL'
                     CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`%` SQL SECURITY INVOKER VIEW `vw_api_clients` AS
                     select
-                        `itc_client`.`id` AS `clientId`,
-                        `itc_client`.`tokenHash` AS `tokenHash`,
-                        `itc_client`.`tag` AS `tag`
-                    from `itc_client`
+                        `client`.`id` AS `clientId`,
+                        `client`.`tokenHash` AS `tokenHash`,
+                        `client`.`tag` AS `tag`
+                    from `client`
                     SQL,
                 <<<'SQL'
                     CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`%` SQL SECURITY INVOKER VIEW `vw_api_clients` AS
                     select
-                        `itc_client`.`id` AS `clientId`,
-                        `itc_client`.`tokenHash` AS `tokenHash`,
-                        `itc_client`.`tag` AS `tag`
-                    from `itc_client`
+                        `client`.`id` AS `clientId`,
+                        `client`.`tokenHash` AS `tokenHash`,
+                        `client`.`tag` AS `tag`
+                    from `client`
                     SQL,
             ],
         ];

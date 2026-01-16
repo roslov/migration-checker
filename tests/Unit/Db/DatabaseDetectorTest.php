@@ -43,7 +43,7 @@ final class DatabaseDetectorTest extends Unit
              *
              * @return array<string, string>[] Query response
              */
-            // phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClassAfterLastUsed
+            // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClassAfterLastUsed
             public function execute(string $query, array $params = []): array
             {
                 if (strtolower($query) === strtolower($this->supportedQuery)) {
@@ -56,7 +56,6 @@ final class DatabaseDetectorTest extends Unit
 
                 throw new RuntimeException('Query failed.');
             }
-            // phpcs:enable Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClassAfterLastUsed
         };
 
         $detector = new DatabaseDetector($query);
@@ -66,7 +65,7 @@ final class DatabaseDetectorTest extends Unit
     }
 
     /**
-     * Returns test cases for type detection.
+     * Returns test cases for type and version detection.
      *
      * @return array{0: string, 1: array{0: string, 1: string}}[] Test cases
      */

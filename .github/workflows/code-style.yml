@@ -19,7 +19,7 @@ on:
       - 'infection.json.dist'
       - 'phpunit.xml.dist'
 
-name: Code style analysis
+name: Coding style analysis
 
 jobs:
   mutation:

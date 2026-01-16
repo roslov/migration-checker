@@ -81,5 +81,4 @@ jobs:
             --add-host=host.docker.internal:host-gateway \
             checker \
             codecept run Db \
-            --debug \
             --shard "${{ matrix.shard }}/${{ env.shard-count }}"

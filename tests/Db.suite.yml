@@ -1,0 +1,9 @@
+# Codeception Test Suite Configuration
+#
+# Suite for DB-integration tests.
+
+actor: DbTester
+modules:
+    enabled:
+        - Asserts
+step_decorators: ~

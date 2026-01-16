@@ -14,6 +14,12 @@ ARG COMPOSER_VERSION=2.9.3
 # Build argument: XDebug version
 ARG XDEBUG_VERSION=3.5.0
 
+# Build argument: Docker version
+ARG DOCKER_VERSION=29.1.4-cli
+
+# Build argument: SQLite version
+ARG SQLITE_VERSION=3.46.1-7
+
 
 ###############################
 ### Stage: Composer version ###
@@ -21,6 +27,14 @@ ARG XDEBUG_VERSION=3.5.0
 
 # Base image
 FROM composer:$COMPOSER_VERSION AS versioned-composer
+
+
+#############################
+### Stage: Docker version ###
+#############################
+
+# Base image
+FROM docker:$DOCKER_VERSION AS versioned-docker
 
 
 #############################
@@ -36,6 +50,8 @@ RUN apt update && apt install -y \
     git \
     libicu-dev \
     libpng-dev \
+    libpq-dev \
+    libsqlite3-dev \
     libzip-dev \
     openssh-client \
     unzip \
@@ -50,7 +66,18 @@ RUN docker-php-ext-install \
     intl \
     opcache \
     pcntl \
+    pdo_mysql \
+    pdo_pgsql \
+    pdo_sqlite \
     zip
+
+# Installs SQLite
+ARG SQLITE_VERSION
+RUN apt update && apt install -y \
+    sqlite3=$SQLITE_VERSION \
+    --no-install-recommends && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Sets paths
 ENV PATH=/app:/app/vendor/bin:$PATH
@@ -62,6 +89,9 @@ ENV PHP_USER_ID=33 \
 # Prepares for loading private Composer dependencies
 RUN mkdir -p ~/.ssh \
     && ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+
+# Installs Docker
+COPY --from=versioned-docker /usr/local/bin/docker /usr/local/bin/docker
 
 # Sets the working directory
 WORKDIR /app

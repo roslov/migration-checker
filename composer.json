@@ -24,7 +24,8 @@
     "require-dev": {
         "codeception/codeception": "^5.2",
         "codeception/module-asserts": "^3.1",
-        "roslov/psr12ext": "^14.1"
+        "roslov/psr12ext": "^14.1",
+        "symfony/process": "^6.4"
     },
     "autoload": {
         "psr-4": {

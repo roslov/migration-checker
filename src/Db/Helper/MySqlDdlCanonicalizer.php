@@ -75,7 +75,7 @@ final class MySqlDdlCanonicalizer
      *
      * @todo Decrease cognitive complexity
      */
-    // phpcs:disable SlevomatCodingStandard.Complexity.Cognitive.ComplexityTooHigh
+    // phpcs:ignore SlevomatCodingStandard.Complexity.Cognitive.ComplexityTooHigh
     private function extractColumnsAndKeys(string $body): array
     {
         $lines = $this->splitBodyLines($body);
@@ -125,7 +125,6 @@ final class MySqlDdlCanonicalizer
 
         return [$columns, $primaryKeys, $keys, $constraints, $others];
     }
-    // phpcs:enable SlevomatCodingStandard.Complexity.Cognitive.ComplexityTooHigh
 
     /**
      * Splits body lines.

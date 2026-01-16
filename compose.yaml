@@ -1,0 +1,13 @@
+services:
+    # Migration checker
+    checker:
+        build:
+            context: ./docker
+            target: php-base
+        restart: always
+        environment:
+            # XDEBUG_MODE: "debug,develop"
+            XDEBUG_MODE: "${XDEBUG_MODE:-off}"
+            PHP_IDE_CONFIG: "${PHP_IDE_CONFIG:-serverName=checker}"
+        volumes:
+            - .:/app

@@ -6,6 +6,7 @@ namespace Roslov\MigrationChecker\Tests\Db;
 
 use Codeception\Attribute\DataProvider;
 use Codeception\Test\Unit;
+use InvalidArgumentException;
 use Roslov\MigrationChecker\Db\DatabaseDetector;
 use Roslov\MigrationChecker\Db\SqlQuery;
 use Symfony\Component\Process\Exception\ProcessFailedException;
@@ -69,9 +70,7 @@ final class DatabaseDetectorTest extends Unit
         $this->startDb($imageType, $imageTag);
         $this->waitForDbReadiness($imageType, $imageTag);
 
-        $dsn = $imageType !== 'sqlite'
-            ? 'mysql:host=' . self::HOST . ';port=' . self::PORT . ';dbname=' . self::DATABASE . ';charset=utf8mb4'
-            : 'sqlite::memory:';
+        $dsn = $this->getDsn($imageType);
         $query = new SqlQuery($dsn, self::USER, self::PASSWORD);
 
         $detector = new DatabaseDetector($query);
@@ -118,7 +117,11 @@ final class DatabaseDetectorTest extends Unit
             ['mariadb', '10.11.15', 'MariaDB', '10.11'],
             ['mariadb', '11.8.5', 'MariaDB', '11.8'],
             ['mariadb', '12.1.2', 'MariaDB', '12.1'],
-            // TODO: add postgresql
+            ['postgresql', '14.20-alpine', 'PostgreSQL', '14.20'],
+            ['postgresql', '15.15-alpine', 'PostgreSQL', '15.15'],
+            ['postgresql', '16.11-alpine', 'PostgreSQL', '16.11'],
+            ['postgresql', '17.7-alpine', 'PostgreSQL', '17.7'],
+            ['postgresql', '18.1-alpine', 'PostgreSQL', '18.1'],
             // TODO: add sqlserver
             // TODO: add oracle
         ];
@@ -139,6 +142,7 @@ final class DatabaseDetectorTest extends Unit
      */
     private function startDb(string $imageType, string $imageTag): void
     {
+        codecept_debug('Starting the test DB...');
         $command = $this->getContainerRunCommand($imageType, $imageTag);
         if ($command === null) {
             return;
@@ -159,6 +163,7 @@ final class DatabaseDetectorTest extends Unit
      */
     private function stopDb(): void
     {
+        codecept_debug('Stopping the test DB...');
         $process = Process::fromShellCommandline('docker rm -f ' . self::CONTAINER . ' || true');
         $process->run();
 
@@ -210,7 +215,7 @@ final class DatabaseDetectorTest extends Unit
      */
     private function getContainerRunCommand(string $imageType, string $imageTag): ?array
     {
-        $commands = [
+        return match ($imageType) {
             'mysql' => [
                 'docker',
                 'run',
@@ -242,16 +247,25 @@ final class DatabaseDetectorTest extends Unit
                 '--character-set-server=utf8mb4',
                 '--collation-server=utf8mb4_unicode_ci',
             ],
-            // TODO: add postgresql
-//            'postgresql' => [],
+            'postgresql' => [
+                'docker',
+                'run',
+                '--name', self::CONTAINER,
+                '-d',
+                '--rm',
+                '-e', 'POSTGRES_DB=' . self::DATABASE,
+                '-e', 'POSTGRES_USER=' . self::USER,
+                '-e', 'POSTGRES_PASSWORD=' . self::PASSWORD,
+                '-p', self::PORT . ':5432',
+                'postgres:' . $imageTag,
+            ],
             // TODO: add sqlserver
 //            'sqlserver' => [],
             // TODO: add oracle
 //            'oracle' => [],
             'sqlite' => null,
-        ];
-
-        return $commands[$imageType];
+            default => throw new InvalidArgumentException('Invalid image type.'),
+        };
     }
 
     /**
@@ -264,25 +278,52 @@ final class DatabaseDetectorTest extends Unit
      */
     private function getWaitCommand(string $imageType, string $imageTag): ?string
     {
-        $commands = [
-            'mysql' => "mysql -u '" . self::USER . "' '-p" . self::PASSWORD . "' -P 3306 -e 'SELECT 1'",
-            'mariadb' => "mysql -u '" . self::USER . "' '-p" . self::PASSWORD . "' -P 3306 -e 'SELECT 1'",
-            'mariadb11+' => "mariadb -u '" . self::USER . "' '-p" . self::PASSWORD . "' -P 3306 -e 'SELECT 1'",
-            // TODO: add postgresql
-//            'postgresql' => '',
-            // TODO: add sqlserver
-//            'sqlserver' => '',
-            // TODO: add oracle
-//            'oracle' => '',
-            'sqlite' => null,
-        ];
-
         $commandKey = $imageType;
         if ($imageType === 'mariadb') {
             $majorVersion = (int) explode('.', $imageTag)[0];
             $commandKey = $majorVersion >= 11 ? 'mariadb11+' : 'mariadb';
         }
+        $user = self::USER;
+        $encodedUser = urlencode($user);
+        $password = self::PASSWORD;
+        $encodedPassword = urlencode($password);
+        $db = self::DATABASE;
 
-        return $commands[$commandKey];
+        return match ($commandKey) {
+            'mysql', 'mariadb' => "mysql -u '$user' '-p$password' -P 3306 -e 'SELECT 1'",
+            'mariadb11+' => "mariadb -u '$user' '-p$password' -P 3306 -e 'SELECT 1'",
+            'postgresql' => "psql -X 'postgresql://$encodedUser:$encodedPassword@127.0.0.1:5432/$db' -c 'SELECT 1'",
+            // TODO: add sqlserver
+//            'sqlserver' => '',
+            // TODO: add oracle
+//            'oracle' => '',
+            'sqlite' => null,
+            default => throw new InvalidArgumentException('Invalid image type.'),
+        };
+    }
+
+    /**
+     * Returns DSN.
+     *
+     * @param string $imageType Image type for container creation
+     *
+     * @return string DSN
+     */
+    private function getDsn(string $imageType): string
+    {
+        $host = self::HOST;
+        $port = self::PORT;
+        $db = self::DATABASE;
+
+        return match ($imageType) {
+            'mysql', 'mariadb' => "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4",
+            'postgresql' => "pgsql:host=$host;port=$port;dbname=$db",
+            // TODO: add sqlserver
+//            'sqlserver' => '',
+            // TODO: add oracle
+//            'oracle' => '',
+            'sqlite' => 'sqlite::memory:',
+            default => throw new InvalidArgumentException('Invalid image type.'),
+        };
     }
 }

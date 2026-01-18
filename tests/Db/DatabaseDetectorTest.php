@@ -44,7 +44,7 @@ final class DatabaseDetectorTest extends Unit
     /**
      * External port to connect the database
      */
-    private const PORT = 13306;
+    private const PORT = 10166;
 
     /**
      * Database readiness timeout in seconds
@@ -67,7 +67,7 @@ final class DatabaseDetectorTest extends Unit
         string $expectedVersion,
     ): void {
         $this->startDb($imageType, $imageTag);
-        $this->waitForDbReadiness($imageType);
+        $this->waitForDbReadiness($imageType, $imageTag);
 
         $dsn = $imageType !== 'sqlite'
             ? 'mysql:host=' . self::HOST . ';port=' . self::PORT . ';dbname=' . self::DATABASE . ';charset=utf8mb4'
@@ -108,11 +108,16 @@ final class DatabaseDetectorTest extends Unit
             ['mysql', '8.4.5', 'MySQL', '8.4'],
             ['mysql', '8.0.44', 'MySQL', '8.0'],
             ['mysql', '9.5.0', 'MySQL', '9.5'],
+            ['mysql', '9.0.1', 'MySQL', '9.0'],
             ['mysql', '5.6.50', 'MySQL', '5.6'],
             ['mysql', '5.5.62', 'MySQL', '5.5'],
             // Version of SQLite is equal to `SQLITE_VERSION` in `docker/Dockerfile`
             ['sqlite', '', 'SQLite', '3.46'],
-            // TODO: add mariadb
+            ['mariadb', '10.3.39', 'MariaDB', '10.3'],
+            ['mariadb', '10.6.24', 'MariaDB', '10.6'],
+            ['mariadb', '10.11.15', 'MariaDB', '10.11'],
+            ['mariadb', '11.8.5', 'MariaDB', '11.8'],
+            ['mariadb', '12.1.2', 'MariaDB', '12.1'],
             // TODO: add postgresql
             // TODO: add sqlserver
             // TODO: add oracle
@@ -168,10 +173,11 @@ final class DatabaseDetectorTest extends Unit
      * Waits until a database is ready for queries.
      *
      * @param string $imageType Image type for container creation
+     * @param string $imageTag Image tag for the database container
      */
-    private function waitForDbReadiness(string $imageType): void
+    private function waitForDbReadiness(string $imageType, string $imageTag): void
     {
-        $command = $this->getWaitCommand($imageType);
+        $command = $this->getWaitCommand($imageType, $imageTag);
         if ($command === null) {
             return;
         }
@@ -221,8 +227,21 @@ final class DatabaseDetectorTest extends Unit
                 '--collation-server=utf8mb4_unicode_ci',
                 '--log_bin_trust_function_creators=1',
             ],
-            // TODO: add mariadb
-//            'mariadb' => [],
+            'mariadb' => [
+                'docker',
+                'run',
+                '--name', self::CONTAINER,
+                '-d',
+                '--rm',
+                '-e', 'MYSQL_ROOT_PASSWORD=root_password',
+                '-e', 'MYSQL_DATABASE=' . self::DATABASE,
+                '-e', 'MYSQL_USER=' . self::USER,
+                '-e', 'MYSQL_PASSWORD=' . self::PASSWORD,
+                '-p', self::PORT . ':3306',
+                'mariadb:' . $imageTag,
+                '--character-set-server=utf8mb4',
+                '--collation-server=utf8mb4_unicode_ci',
+            ],
             // TODO: add postgresql
 //            'postgresql' => [],
             // TODO: add sqlserver
@@ -239,15 +258,16 @@ final class DatabaseDetectorTest extends Unit
      * Returns the command for waiting for database readiness.
      *
      * @param string $imageType Image type for container creation
+     * @param string $imageTag Image tag for the database container
      *
      * @return string|null Command for waiting, or null if no need to wait
      */
-    private function getWaitCommand(string $imageType): ?string
+    private function getWaitCommand(string $imageType, string $imageTag): ?string
     {
         $commands = [
-            'mysql' => "mysql -u '" . self::USER . "' '-p" . self::PASSWORD . "' -P " . self::PORT . " -e 'SELECT 1'",
-            // TODO: add mariadb
-//            'mariadb' => '',
+            'mysql' => "mysql -u '" . self::USER . "' '-p" . self::PASSWORD . "' -P 3306 -e 'SELECT 1'",
+            'mariadb' => "mysql -u '" . self::USER . "' '-p" . self::PASSWORD . "' -P 3306 -e 'SELECT 1'",
+            'mariadb11+' => "mariadb -u '" . self::USER . "' '-p" . self::PASSWORD . "' -P 3306 -e 'SELECT 1'",
             // TODO: add postgresql
 //            'postgresql' => '',
             // TODO: add sqlserver
@@ -257,6 +277,12 @@ final class DatabaseDetectorTest extends Unit
             'sqlite' => null,
         ];
 
-        return $commands[$imageType];
+        $commandKey = $imageType;
+        if ($imageType === 'mariadb') {
+            $majorVersion = (int) explode('.', $imageTag)[0];
+            $commandKey = $majorVersion >= 11 ? 'mariadb11+' : 'mariadb';
+        }
+
+        return $commands[$commandKey];
     }
 }

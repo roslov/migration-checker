@@ -11,8 +11,7 @@ endif
 
 export COMPOSE_PROJECT_NAME=migration-checker
 
-init: ## Initialize the project
-	build composer-install codecept-build
+init: build composer-install codecept-build ## Initialize the project
 
 build: ## Build Docker image
 	docker compose build

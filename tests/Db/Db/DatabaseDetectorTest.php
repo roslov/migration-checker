@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Roslov\MigrationChecker\Tests\Db;
+namespace Roslov\MigrationChecker\Tests\Db\Db;
 
 use Codeception\Attribute\DataProvider;
 use Codeception\Test\Unit;
@@ -53,6 +53,11 @@ final class DatabaseDetectorTest extends Unit
     private const READINESS_TIMEOUT = 30;
 
     /**
+     * Database preparation timeout in seconds
+     */
+    private const SETUP_TIMEOUT = 180;
+
+    /**
      * Tests database type and version detection from real databases.
      *
      * @param string $imageType Image type for container creation
@@ -71,7 +76,8 @@ final class DatabaseDetectorTest extends Unit
         $this->waitForDbReadiness($imageType, $imageTag);
 
         $dsn = $this->getDsn($imageType);
-        $query = new SqlQuery($dsn, self::USER, self::PASSWORD);
+        $user = $imageType !== 'sqlserver' ? self::USER : 'sa';
+        $query = new SqlQuery($dsn, $user, self::PASSWORD);
 
         $detector = new DatabaseDetector($query);
         self::assertSame($expectedType, $detector->getType()->value);
@@ -110,24 +116,31 @@ final class DatabaseDetectorTest extends Unit
             ['mysql', '9.0.1', 'MySQL', '9.0'],
             ['mysql', '5.6.50', 'MySQL', '5.6'],
             ['mysql', '5.5.62', 'MySQL', '5.5'],
+
             // Version of SQLite is equal to `SQLITE_VERSION` in `docker/Dockerfile`
             ['sqlite', '', 'SQLite', '3.46'],
+
             ['mariadb', '10.3.39', 'MariaDB', '10.3'],
             ['mariadb', '10.6.24', 'MariaDB', '10.6'],
             ['mariadb', '10.11.15', 'MariaDB', '10.11'],
             ['mariadb', '11.8.5', 'MariaDB', '11.8'],
             ['mariadb', '12.1.2', 'MariaDB', '12.1'],
+
             ['postgresql', '14.20-alpine', 'PostgreSQL', '14.20'],
             ['postgresql', '15.15-alpine', 'PostgreSQL', '15.15'],
             ['postgresql', '16.11-alpine', 'PostgreSQL', '16.11'],
             ['postgresql', '17.7-alpine', 'PostgreSQL', '17.7'],
             ['postgresql', '18.1-alpine', 'PostgreSQL', '18.1'],
-            // TODO: add sqlserver
+
+            ['sqlserver', '2022-CU21-ubuntu-22.04', 'SQL Server', '16.0'],
+            ['sqlserver', '2019-CU32-ubuntu-20.04', 'SQL Server', '15.0'],
+            ['sqlserver', '2017-CU31-ubuntu-18.04', 'SQL Server', '14.0'],
+
             // TODO: add oracle
         ];
         $namedTests = [];
         foreach ($tests as $test) {
-            $key = $test[0] . '-' . $test[3];
+            $key = implode('-', array_filter([$test[0], $test[1]]));
             $namedTests[$key] = $test;
         }
 
@@ -149,6 +162,8 @@ final class DatabaseDetectorTest extends Unit
         }
 
         $process = new Process($command);
+        $process->setTimeout(self::SETUP_TIMEOUT);
+        $this->debugCommand($process);
         $process->run();
 
         if (!$process->isSuccessful()) {
@@ -165,6 +180,8 @@ final class DatabaseDetectorTest extends Unit
     {
         codecept_debug('Stopping the test DB...');
         $process = Process::fromShellCommandline('docker rm -f ' . self::CONTAINER . ' || true');
+        $process->setTimeout(self::SETUP_TIMEOUT);
+        $this->debugCommand($process);
         $process->run();
 
         if (!$process->isSuccessful()) {
@@ -189,9 +206,7 @@ final class DatabaseDetectorTest extends Unit
 
         $container = self::CONTAINER;
         $script = <<<"SCRIPT"
-            while ! docker exec '$container' \
-                $command \
-                >/dev/null 2>&1; do
+            while ! docker exec '$container'  $command; do
                 echo 'Waiting for database connection...'
                 sleep 1
             done
@@ -199,6 +214,7 @@ final class DatabaseDetectorTest extends Unit
 
         $process = Process::fromShellCommandline($script);
         $process->setTimeout(self::READINESS_TIMEOUT);
+        $this->debugCommand($process);
         // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
         $process->run(static function ($type, $buffer): void {
             codecept_debug($buffer);
@@ -259,8 +275,17 @@ final class DatabaseDetectorTest extends Unit
                 '-p', self::PORT . ':5432',
                 'postgres:' . $imageTag,
             ],
-            // TODO: add sqlserver
-//            'sqlserver' => [],
+            'sqlserver' => [
+                'docker',
+                'run',
+                '--name', self::CONTAINER,
+                '-d',
+                '--rm',
+                '-e', 'ACCEPT_EULA=Y',
+                '-e', 'MSSQL_SA_PASSWORD=' . self::PASSWORD,
+                '-p', self::PORT . ':1433',
+                'mcr.microsoft.com/mssql/server:' . $imageTag,
+            ],
             // TODO: add oracle
 //            'oracle' => [],
             'sqlite' => null,
@@ -278,23 +303,19 @@ final class DatabaseDetectorTest extends Unit
      */
     private function getWaitCommand(string $imageType, string $imageTag): ?string
     {
-        $commandKey = $imageType;
-        if ($imageType === 'mariadb') {
-            $majorVersion = (int) explode('.', $imageTag)[0];
-            $commandKey = $majorVersion >= 11 ? 'mariadb11+' : 'mariadb';
-        }
         $user = self::USER;
         $encodedUser = urlencode($user);
         $password = self::PASSWORD;
         $encodedPassword = urlencode($password);
         $db = self::DATABASE;
+        $commandKey = $this->getCommandKey($imageType, $imageTag);
 
         return match ($commandKey) {
             'mysql', 'mariadb' => "mysql -u '$user' '-p$password' -P 3306 -e 'SELECT 1'",
             'mariadb11+' => "mariadb -u '$user' '-p$password' -P 3306 -e 'SELECT 1'",
             'postgresql' => "psql -X 'postgresql://$encodedUser:$encodedPassword@127.0.0.1:5432/$db' -c 'SELECT 1'",
-            // TODO: add sqlserver
-//            'sqlserver' => '',
+            'sqlserver' => "/opt/mssql-tools/bin/sqlcmd -S 127.0.0.1 -U sa -P '$password' -C -Q 'SELECT 1'",
+            'sqlserver2019' => "/opt/mssql-tools18/bin/sqlcmd -S 127.0.0.1 -U sa -P '$password' -C -Q 'SELECT 1'",
             // TODO: add oracle
 //            'oracle' => '',
             'sqlite' => null,
@@ -318,12 +339,66 @@ final class DatabaseDetectorTest extends Unit
         return match ($imageType) {
             'mysql', 'mariadb' => "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4",
             'postgresql' => "pgsql:host=$host;port=$port;dbname=$db",
-            // TODO: add sqlserver
-//            'sqlserver' => '',
+            'sqlserver' => "sqlsrv:Server=$host,$port;TrustServerCertificate=yes",
             // TODO: add oracle
 //            'oracle' => '',
             'sqlite' => 'sqlite::memory:',
             default => throw new InvalidArgumentException('Invalid image type.'),
         };
+    }
+
+    /**
+     * Debugs the command line of a process.
+     *
+     * @param Process $process Process to debug
+     */
+    private function debugCommand(Process $process): void
+    {
+        codecept_debug('Command: ' . $process->getCommandLine());
+    }
+
+    /**
+     * Returns the command key for the wait command based on the image type and tag.
+     *
+     * @param string $imageType Image type for container creation
+     * @param string $imageTag Image tag for the database container
+     *
+     * @return string Command key for the wait command
+     */
+    private function getCommandKey(string $imageType, string $imageTag): string
+    {
+        return match ($imageType) {
+            'mariadb' => $this->getCommandKeyForMariaDb($imageTag),
+            'sqlserver' => $this->getCommandKeyForSqlServer($imageTag),
+            default => $imageType,
+        };
+    }
+
+    /**
+     * Returns the command key for the wait command based on the MariaDB image tag.
+     *
+     * @param string $imageTag Image tag for the database container
+     *
+     * @return string Command key for the wait command
+     */
+    private function getCommandKeyForMariaDb(string $imageTag): string
+    {
+        $majorVersion = (int) explode('.', $imageTag)[0];
+
+        return $majorVersion >= 11 ? 'mariadb11+' : 'mariadb';
+    }
+
+    /**
+     * Returns the command key for the wait command based on the SQL Server image tag.
+     *
+     * @param string $imageTag Image tag for the database container
+     *
+     * @return string Command key for the wait command
+     */
+    private function getCommandKeyForSqlServer(string $imageTag): string
+    {
+        $majorVersion = (int) explode('-', $imageTag)[0];
+
+        return $majorVersion >= 2019 ? 'sqlserver2019' : 'sqlserver';
     }
 }

@@ -7,6 +7,7 @@ namespace Roslov\MigrationChecker\Db;
 use Roslov\MigrationChecker\Contract\DatabaseDetectorInterface;
 use Roslov\MigrationChecker\Contract\QueryInterface;
 use Roslov\MigrationChecker\Enum\DatabaseType;
+use Roslov\MigrationChecker\Exception\DatabaseConnectionFailedException;
 use Throwable;
 
 /**
@@ -37,6 +38,7 @@ final class DatabaseDetector implements DatabaseDetectorInterface
 
     /**
      * @inheritDoc
+     * @throws DatabaseConnectionFailedException If the database connection fails
      */
     public function getType(): DatabaseType
     {
@@ -45,6 +47,7 @@ final class DatabaseDetector implements DatabaseDetectorInterface
 
     /**
      * @inheritDoc
+     * @throws DatabaseConnectionFailedException If the database connection fails
      */
     public function getVersion(): ?string
     {
@@ -55,22 +58,59 @@ final class DatabaseDetector implements DatabaseDetectorInterface
      * Retrieves the type and version of the database.
      *
      * @return array{0: DatabaseType, 1: ?string} The type and version of the database
+     *
+     * @throws DatabaseConnectionFailedException If the database connection fails
      */
     private function getTypeAndVersion(): array
     {
         foreach (self::STRATEGIES as $strategy) {
-            try {
-                $result = $this->query->execute($strategy['query'])[0] ?? [];
-                $versionString = (string) reset($result);
-                if (stripos($versionString, $strategy['keyword']) !== false) {
-                    return [$strategy['name'], $this->extractVersionFromString($versionString)];
-                }
-            } catch (Throwable) {
-                continue;
+            $result = $this->tryStrategy($strategy);
+            if ($result !== null) {
+                return $result;
             }
         }
 
         return [DatabaseType::Unknown, null];
+    }
+
+    /**
+     * Tries a single detection strategy.
+     *
+     * @param array{name: DatabaseType, query: string, keyword: string} $strategy
+     *
+     * @return array{0: DatabaseType, 1: ?string}|null The type and version of the database
+     *
+     * @throws DatabaseConnectionFailedException If the database connection fails
+     */
+    private function tryStrategy(array $strategy): ?array
+    {
+        try {
+            $versionString = $this->getVersionString($strategy['query']);
+        } catch (DatabaseConnectionFailedException $e) {
+            throw $e;
+        } catch (Throwable) {
+            return null;
+        }
+
+        if (stripos($versionString, $strategy['keyword']) !== false) {
+            return [$strategy['name'], $this->extractVersionFromString($versionString)];
+        }
+
+        return null;
+    }
+
+    /**
+     * Retrieves the version string from the query result.
+     *
+     * @param string $query The query to execute
+     *
+     * @return string The version string
+     */
+    private function getVersionString(string $query): string
+    {
+        $result = $this->query->execute($query)[0] ?? [];
+
+        return (string) reset($result);
     }
 
     /**

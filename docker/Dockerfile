@@ -23,6 +23,9 @@ ARG SQLITE_VERSION=3.46.1-7
 # Build argument: SQL Server PDO version
 ARG SQL_SERVER_PDO_VERSION=5.12.0
 
+# Build argument: php-extension-installer version
+ARG PHP_EXTENSION_INSTALLER_VERSION=2.9.27
+
 
 ###############################
 ### Stage: Composer version ###
@@ -38,6 +41,14 @@ FROM composer:$COMPOSER_VERSION AS versioned-composer
 
 # Base image
 FROM docker:$DOCKER_VERSION AS versioned-docker
+
+
+#############################
+### Stage: Docker version ###
+#############################
+
+# Base image
+FROM mlocati/php-extension-installer:$PHP_EXTENSION_INSTALLER_VERSION AS versioned-php-extension-installer
 
 
 #############################
@@ -100,6 +111,10 @@ RUN apt update && \
     docker-php-ext-enable pdo_sqlsrv && \
     apt clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Installs Oracle
+COPY --from=versioned-php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+RUN install-php-extensions pdo_oci
 
 # Sets paths
 ENV PATH=/app:/app/vendor/bin:$PATH

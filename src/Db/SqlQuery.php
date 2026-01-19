@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Roslov\MigrationChecker\Db;
 
 use PDO;
+use PDOException;
 use Roslov\MigrationChecker\Contract\QueryInterface;
+use Roslov\MigrationChecker\Exception\DatabaseConnectionFailedException;
 use Roslov\MigrationChecker\Exception\PdoNotFoundException;
 
 /**
@@ -59,7 +61,14 @@ final class SqlQuery implements QueryInterface
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false,
             ];
-            $this->PDO = new PDO($this->dsn, $this->user, $this->password, $options);
+            try {
+                $this->PDO = new PDO($this->dsn, $this->user, $this->password, $options);
+            } catch (PDOException $e) {
+                throw new DatabaseConnectionFailedException(
+                    message: 'Failed to connect to the database: ' . $e->getMessage(),
+                    previous: $e,
+                );
+            }
         }
 
         return $this->PDO;

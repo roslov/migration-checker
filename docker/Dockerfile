@@ -20,6 +20,9 @@ ARG DOCKER_VERSION=29.1.4-cli
 # Build argument: SQLite version
 ARG SQLITE_VERSION=3.46.1-7
 
+# Build argument: SQL Server PDO version
+ARG SQL_SERVER_PDO_VERSION=5.12.0
+
 
 ###############################
 ### Stage: Composer version ###
@@ -76,6 +79,25 @@ ARG SQLITE_VERSION
 RUN apt update && apt install -y \
     sqlite3=$SQLITE_VERSION \
     --no-install-recommends && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Installs SQL Server
+ARG SQL_SERVER_PDO_VERSION
+RUN apt update && \
+    apt install -y --no-install-recommends \
+        gnupg2 \
+        unixodbc-dev \
+        && \
+    curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | \
+        gpg --dearmor > /usr/share/keyrings/microsoft.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/debian/11/prod bullseye main" \
+        > /etc/apt/sources.list.d/mssql-release.list && \
+    apt update && \
+        ACCEPT_EULA=Y apt install -y --no-install-recommends \
+        msodbcsql18 && \
+    pecl install pdo_sqlsrv-$SQL_SERVER_PDO_VERSION && \
+    docker-php-ext-enable pdo_sqlsrv && \
     apt clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

@@ -25,7 +25,7 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     env:
-      shard-count: 3
+      shard-count: 5
     outputs:
       shards: ${{ steps.set-shards.outputs.shards }}
       shard-count: ${{ steps.set-shard-count.outputs.shard-count }}

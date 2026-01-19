@@ -472,9 +472,18 @@ Tests can be executed by running
 ./vendor/bin/codecept run
 ```
 
+inside a container, or
+
+```shell
+make test
+```
+
+from the host machine.
+
 ### Running tests
 
 To execute tests, do the following:
+
 ```sh
 # Run all available tests
 codecept run
@@ -514,3 +523,11 @@ The code style is analyzed with [PHP_CodeSniffer](https://github.com/squizlabs/P
 ```shell
 ./vendor/bin/phpcs --extensions=php --colors --standard=PSR12Ext --runtime-set php_version 80100 --ignore=vendor/* -p -s .
 ```
+
+inside a container, or
+
+```shell
+make phpcs
+```
+
+from the host machine.

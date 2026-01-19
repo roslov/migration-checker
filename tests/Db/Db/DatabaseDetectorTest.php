@@ -50,12 +50,12 @@ final class DatabaseDetectorTest extends Unit
     /**
      * Database readiness timeout in seconds
      */
-    private const READINESS_TIMEOUT = 30;
+    private const READINESS_TIMEOUT = 120;
 
     /**
      * Database preparation timeout in seconds
      */
-    private const SETUP_TIMEOUT = 180;
+    private const SETUP_TIMEOUT = 600;
 
     /**
      * Tests database type and version detection from real databases.

@@ -1,6 +1,6 @@
 services:
     # Migration checker
-    checker:
+    app:
         build:
             context: ./docker
             target: php-base
@@ -8,7 +8,7 @@ services:
         environment:
             # XDEBUG_MODE: "debug,develop"
             XDEBUG_MODE: "${XDEBUG_MODE:-off}"
-            PHP_IDE_CONFIG: "${PHP_IDE_CONFIG:-serverName=checker}"
+            PHP_IDE_CONFIG: "${PHP_IDE_CONFIG:-serverName=migration-checker}"
         volumes:
             - .:/app
             - /var/run/docker.sock:/var/run/docker.sock

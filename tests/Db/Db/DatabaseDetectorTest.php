@@ -35,7 +35,7 @@ final class DatabaseDetectorTest extends Unit
     /**
      * User password
      */
-    private const PASSWORD = 'Password123!';
+    private const PASSWORD = 'Password123_';
 
     /**
      * Database host in the local network
@@ -75,10 +75,7 @@ final class DatabaseDetectorTest extends Unit
         $this->startDb($imageType, $imageTag);
         $this->waitForDbReadiness($imageType, $imageTag);
 
-        $dsn = $this->getDsn($imageType);
-        $user = $imageType !== 'sqlserver' ? self::USER : 'sa';
-        $query = new SqlQuery($dsn, $user, self::PASSWORD);
-
+        $query = new SqlQuery($this->getDsn($imageType), $this->getUsername($imageType), self::PASSWORD);
         $detector = new DatabaseDetector($query);
         self::assertSame($expectedType, $detector->getType()->value);
         self::assertSame($expectedVersion, $detector->getVersion());
@@ -136,7 +133,9 @@ final class DatabaseDetectorTest extends Unit
             ['sqlserver', '2019-CU32-ubuntu-20.04', 'SQL Server', '15.0'],
             ['sqlserver', '2017-CU31-ubuntu-18.04', 'SQL Server', '14.0'],
 
-            // TODO: add oracle
+            ['oracle', '21.3.0-slim', 'Oracle', '21.0'],
+            ['oracle', '18.4.0-slim', 'Oracle', '18.0'],
+            ['oracle', '11.2.0.2-slim', 'Oracle', '11.2'],
         ];
         $namedTests = [];
         foreach ($tests as $test) {
@@ -206,7 +205,7 @@ final class DatabaseDetectorTest extends Unit
 
         $container = self::CONTAINER;
         $script = <<<"SCRIPT"
-            while ! docker exec '$container'  $command; do
+            while ! docker exec '$container' $command; do
                 echo 'Waiting for database connection...'
                 sleep 1
             done
@@ -233,11 +232,7 @@ final class DatabaseDetectorTest extends Unit
     {
         return match ($imageType) {
             'mysql' => [
-                'docker',
-                'run',
-                '--name', self::CONTAINER,
-                '-d',
-                '--rm',
+                'docker', 'run', '--name', self::CONTAINER, '-d', '--rm',
                 '-e', 'MYSQL_ROOT_PASSWORD=root_password',
                 '-e', 'MYSQL_DATABASE=' . self::DATABASE,
                 '-e', 'MYSQL_USER=' . self::USER,
@@ -249,11 +244,7 @@ final class DatabaseDetectorTest extends Unit
                 '--log_bin_trust_function_creators=1',
             ],
             'mariadb' => [
-                'docker',
-                'run',
-                '--name', self::CONTAINER,
-                '-d',
-                '--rm',
+                'docker', 'run', '--name', self::CONTAINER, '-d', '--rm',
                 '-e', 'MYSQL_ROOT_PASSWORD=root_password',
                 '-e', 'MYSQL_DATABASE=' . self::DATABASE,
                 '-e', 'MYSQL_USER=' . self::USER,
@@ -264,11 +255,7 @@ final class DatabaseDetectorTest extends Unit
                 '--collation-server=utf8mb4_unicode_ci',
             ],
             'postgresql' => [
-                'docker',
-                'run',
-                '--name', self::CONTAINER,
-                '-d',
-                '--rm',
+                'docker', 'run', '--name', self::CONTAINER, '-d', '--rm',
                 '-e', 'POSTGRES_DB=' . self::DATABASE,
                 '-e', 'POSTGRES_USER=' . self::USER,
                 '-e', 'POSTGRES_PASSWORD=' . self::PASSWORD,
@@ -276,18 +263,18 @@ final class DatabaseDetectorTest extends Unit
                 'postgres:' . $imageTag,
             ],
             'sqlserver' => [
-                'docker',
-                'run',
-                '--name', self::CONTAINER,
-                '-d',
-                '--rm',
+                'docker', 'run', '--name', self::CONTAINER, '-d', '--rm',
                 '-e', 'ACCEPT_EULA=Y',
                 '-e', 'MSSQL_SA_PASSWORD=' . self::PASSWORD,
                 '-p', self::PORT . ':1433',
                 'mcr.microsoft.com/mssql/server:' . $imageTag,
             ],
-            // TODO: add oracle
-//            'oracle' => [],
+            'oracle' => [
+                'docker', 'run', '--name', self::CONTAINER, '-d', '--rm',
+                '-e', 'ORACLE_PASSWORD=' . self::PASSWORD,
+                '-p', self::PORT . ':1521',
+                'gvenzl/oracle-xe:' . $imageTag,
+            ],
             'sqlite' => null,
             default => throw new InvalidArgumentException('Invalid image type.'),
         };
@@ -316,15 +303,16 @@ final class DatabaseDetectorTest extends Unit
             'postgresql' => "psql -X 'postgresql://$encodedUser:$encodedPassword@127.0.0.1:5432/$db' -c 'SELECT 1'",
             'sqlserver' => "/opt/mssql-tools/bin/sqlcmd -S 127.0.0.1 -U sa -P '$password' -C -Q 'SELECT 1'",
             'sqlserver2019' => "/opt/mssql-tools18/bin/sqlcmd -S 127.0.0.1 -U sa -P '$password' -C -Q 'SELECT 1'",
-            // TODO: add oracle
-//            'oracle' => '',
+            'oracle' => <<<COMMAND
+                sh -c "echo 'exit' | sqlplus -L 'SYSTEM/$password@//127.0.0.1:1521/XE'"
+                COMMAND,
             'sqlite' => null,
             default => throw new InvalidArgumentException('Invalid image type.'),
         };
     }
 
     /**
-     * Returns DSN.
+     * Returns PDO DSN.
      *
      * @param string $imageType Image type for container creation
      *
@@ -340,10 +328,25 @@ final class DatabaseDetectorTest extends Unit
             'mysql', 'mariadb' => "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4",
             'postgresql' => "pgsql:host=$host;port=$port;dbname=$db",
             'sqlserver' => "sqlsrv:Server=$host,$port;TrustServerCertificate=yes",
-            // TODO: add oracle
-//            'oracle' => '',
+            'oracle' => "oci:dbname=//$host:$port/XE",
             'sqlite' => 'sqlite::memory:',
             default => throw new InvalidArgumentException('Invalid image type.'),
+        };
+    }
+
+    /**
+     * Returns the database username.
+     *
+     * @param string $imageType Image type for container creation
+     *
+     * @return string Username
+     */
+    private function getUsername(string $imageType): string
+    {
+        return match ($imageType) {
+            'sqlserver' => 'sa',
+            'oracle' => 'SYSTEM',
+            default => self::USER,
         };
     }
 

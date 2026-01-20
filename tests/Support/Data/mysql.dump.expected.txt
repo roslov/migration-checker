@@ -1,0 +1,158 @@
+-- ### Tables ###
+-- Table:
+info
+
+-- Create Table:
+CREATE TABLE `info` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Pet info'
+
+
+-- Table:
+owner
+
+-- Create Table:
+CREATE TABLE `owner` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `first_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `last_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` char(8) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_first_name` (`first_name`),
+  KEY `idx_last_name` (`last_name`),
+  UNIQUE KEY `idx_name` (`first_name`,`last_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Owner'
+
+
+-- Table:
+pet
+
+-- Create Table:
+CREATE TABLE `pet` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `type` enum('dog','cat') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Pet type',
+  `info_id` int NOT NULL,
+  `owner_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_info` (`info_id`),
+  KEY `fk_owner` (`owner_id`),
+  CONSTRAINT `fk_info` FOREIGN KEY (`info_id`) REFERENCES `info` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_owner` FOREIGN KEY (`owner_id`) REFERENCES `owner` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Pets'
+
+
+-- ### Views ###
+-- View:
+vw_pet
+
+-- Create View:
+CREATE ALGORITHM=UNDEFINED DEFINER=`user`@`%` SQL SECURITY INVOKER VIEW `vw_pet` AS select `pet`.`id` AS `id`,`pet`.`type` AS `type` from `pet`
+
+-- character_set_client:
+utf8mb4
+
+-- collation_connection:
+utf8mb4_unicode_ci
+
+
+-- ### Triggers ###
+-- Trigger:
+before_owner_update
+
+-- sql_mode:
+{SQL_MODE}
+
+-- SQL Original Statement:
+CREATE DEFINER=`user`@`%` TRIGGER `before_owner_update` BEFORE UPDATE ON `owner` FOR EACH ROW BEGIN
+    IF new.first_name = 'John' THEN
+        SET new.last_name = 'Doe';
+    END IF;
+END
+
+-- character_set_client:
+utf8mb4
+
+-- collation_connection:
+utf8mb4_unicode_ci
+
+-- Database Collation:
+utf8mb4_unicode_ci
+
+
+-- ### Procedures and functions ###
+-- Function:
+get_full_name
+
+-- sql_mode:
+{SQL_MODE}
+
+-- Create Function:
+CREATE DEFINER=`user`@`%` FUNCTION `get_full_name`(owner_id INT) RETURNS varchar(150) CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci
+    SQL SECURITY INVOKER
+BEGIN
+    DECLARE full_name varchar(150);
+    SELECT CONCAT_WS(' ', first_name, last_name)
+        INTO full_name
+        FROM owner
+        WHERE id = owner_id;
+    RETURN full_name;
+END
+
+-- character_set_client:
+utf8mb4
+
+-- collation_connection:
+utf8mb4_unicode_ci
+
+-- Database Collation:
+utf8mb4_unicode_ci
+
+
+-- Procedure:
+rename_to_john_doe
+
+-- sql_mode:
+{SQL_MODE}
+
+-- Create Procedure:
+CREATE DEFINER=`user`@`%` PROCEDURE `rename_to_john_doe`(IN owner_id int)
+    SQL SECURITY INVOKER
+BEGIN
+    UPDATE owner SET first_name = 'John', last_name = 'Doe' WHERE id = owner_id;
+END
+
+-- character_set_client:
+utf8mb4
+
+-- collation_connection:
+utf8mb4_unicode_ci
+
+-- Database Collation:
+utf8mb4_unicode_ci
+
+
+-- ### Events ###
+-- Event:
+rename_first_owner
+
+-- sql_mode:
+{SQL_MODE}
+
+-- time_zone:
+SYSTEM
+
+-- Create Event:
+CREATE DEFINER=`user`@`%` EVENT `rename_first_owner` ON SCHEDULE EVERY 1 DAY STARTS '2026-01-20 17:00:00' ON COMPLETION NOT PRESERVE ENABLE DO BEGIN
+    CALL rename_to_john_doe(1);
+END
+
+-- character_set_client:
+utf8mb4
+
+-- collation_connection:
+utf8mb4_unicode_ci
+
+-- Database Collation:
+utf8mb4_unicode_ci

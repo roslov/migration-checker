@@ -35,13 +35,14 @@ final class DatabaseDetectorTest extends Unit
         string $expectedType,
         string $expectedVersion,
     ): void {
-        $this->tester->startDb($imageType, $imageTag);
-        $this->tester->waitForDbReadiness($imageType, $imageTag);
+        $I = $this->tester;
+        $I->startDb($imageType, $imageTag);
+        $I->waitForDbReadiness($imageType, $imageTag);
 
         $query = new SqlQuery(
-            $this->tester->getDsn($imageType),
-            $this->tester->getUsername($imageType),
-            $this->tester->getPassword(),
+            $I->getDsn($imageType),
+            $I->getUsername($imageType),
+            $I->getPassword(),
         );
         $detector = new DatabaseDetector($query);
         self::assertSame($expectedType, $detector->getType()->value);
@@ -54,7 +55,8 @@ final class DatabaseDetectorTest extends Unit
     // phpcs:ignore PSR2.Methods.MethodDeclaration.Underscore
     public function _before(): void
     {
-        $this->tester->stopDb();
+        $I = $this->tester;
+        $I->stopDb();
     }
 
     /**
@@ -63,7 +65,8 @@ final class DatabaseDetectorTest extends Unit
     // phpcs:ignore PSR2.Methods.MethodDeclaration.Underscore
     public function _after(): void
     {
-        $this->tester->stopDb();
+        $I = $this->tester;
+        $I->stopDb();
     }
 
     /**
@@ -74,27 +77,27 @@ final class DatabaseDetectorTest extends Unit
     public static function dbProvider(): array
     {
         $tests = [
-            ['mysql', '8.4.5', 'MySQL', '8.4'],
-            ['mysql', '8.0.44', 'MySQL', '8.0'],
             ['mysql', '9.5.0', 'MySQL', '9.5'],
             ['mysql', '9.0.1', 'MySQL', '9.0'],
+            ['mysql', '8.4.5', 'MySQL', '8.4'],
+            ['mysql', '8.0.44', 'MySQL', '8.0'],
             ['mysql', '5.6.50', 'MySQL', '5.6'],
             ['mysql', '5.5.62', 'MySQL', '5.5'],
 
             // Version of SQLite is equal to `SQLITE_VERSION` in `docker/Dockerfile`
             ['sqlite', '', 'SQLite', '3.46'],
 
-            ['mariadb', '10.3.39', 'MariaDB', '10.3'],
-            ['mariadb', '10.6.24', 'MariaDB', '10.6'],
-            ['mariadb', '10.11.15', 'MariaDB', '10.11'],
-            ['mariadb', '11.8.5', 'MariaDB', '11.8'],
             ['mariadb', '12.1.2', 'MariaDB', '12.1'],
+            ['mariadb', '11.8.5', 'MariaDB', '11.8'],
+            ['mariadb', '10.11.15', 'MariaDB', '10.11'],
+            ['mariadb', '10.6.24', 'MariaDB', '10.6'],
+            ['mariadb', '10.3.39', 'MariaDB', '10.3'],
 
-            ['postgresql', '14.20-alpine', 'PostgreSQL', '14.20'],
-            ['postgresql', '15.15-alpine', 'PostgreSQL', '15.15'],
-            ['postgresql', '16.11-alpine', 'PostgreSQL', '16.11'],
-            ['postgresql', '17.7-alpine', 'PostgreSQL', '17.7'],
             ['postgresql', '18.1-alpine', 'PostgreSQL', '18.1'],
+            ['postgresql', '17.7-alpine', 'PostgreSQL', '17.7'],
+            ['postgresql', '16.11-alpine', 'PostgreSQL', '16.11'],
+            ['postgresql', '15.15-alpine', 'PostgreSQL', '15.15'],
+            ['postgresql', '14.20-alpine', 'PostgreSQL', '14.20'],
 
             ['sqlserver', '2022-CU21-ubuntu-22.04', 'SQL Server', '16.0'],
             ['sqlserver', '2019-CU32-ubuntu-20.04', 'SQL Server', '15.0'],

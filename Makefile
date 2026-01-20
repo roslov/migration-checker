@@ -38,10 +38,10 @@ codecept-build: ## Run `codeception build`
 	docker compose run --rm app codecept build
 
 test: ## Run all tests
-	docker compose run --rm app codecept run
+	docker compose run --rm app codecept run Unit,Db
 
 test-debug: ## Run all tests with debugging mode enabled
-	docker compose run --rm -e XDEBUG_MODE=debug,develop app codecept run --debug
+	docker compose run --rm -e XDEBUG_MODE=debug,develop app codecept run Unit,Db --debug
 
 phpcs: ## Validate the coding style
 	docker compose run --rm app phpcs --extensions=php --colors --standard=PSR12Ext --runtime-set php_version 80100 --ignore=vendor/* -p -s .

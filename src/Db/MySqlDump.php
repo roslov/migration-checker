@@ -51,7 +51,7 @@ final class MySqlDump implements DumpInterface
             $events
             DUMP;
 
-        return new State($dump);
+        return new State(trim($dump));
     }
 
     /**

@@ -104,6 +104,7 @@ use App\Migration\Migration;
 use App\Migration\Printer;
 use App\Migration\SqlQuery;
 use Override;
+use Roslov\MigrationChecker\Db\DatabaseDetector;
 use Roslov\MigrationChecker\Db\Dump;
 use Roslov\MigrationChecker\Db\SchemaStateComparer;
 use Roslov\MigrationChecker\MigrationChecker;
@@ -132,7 +133,8 @@ final class CheckMigrationsCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $logger = new ConsoleLogger($output);
-        $dump = new Dump($this->query);
+        $detector = new DatabaseDetector($this->query);
+        $dump = new Dump($this->query, $detector);
         $comparer = new SchemaStateComparer($dump);
 
         $checker = new MigrationChecker(

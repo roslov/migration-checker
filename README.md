@@ -15,10 +15,10 @@ states, and printing readable diffs.
 - PHP 8.1 or higher.
 
 
-## Limitations
+## Supported database types and versions
 
-The built-in class `\Roslov\MigrationChecker\Db\MySqlDump` currently supports MySQL/MariaDB only.
-If you need to support other databases, you have to write your own dumper.
+- MySQL 5.5 to 9.5+
+- MariaDB 10.0 to 12.1+
 
 
 ## Installation
@@ -56,7 +56,7 @@ You connect the checker to your app by implementing these contracts:
 - `\Roslov\MigrationChecker\Contract\PrinterInterface` renders schema diffs when changes are detected.
 - `\Roslov\MigrationChecker\Contract\DatabaseDetectorInterface` _(optional)_ detects database type and version.
 
-The checker ships with MySQL helpers:
+The checker ships with SQL helpers:
 
 - `\Roslov\MigrationChecker\Db\SchemaStateComparer` compares two schema dumps.
 - `\Roslov\MigrationChecker\Db\Dump` automatically detects the database type and dumps its schema.
@@ -101,10 +101,10 @@ namespace App\Command;
 
 use App\Migration\Environment;
 use App\Migration\Migration;
-use App\Migration\MySqlQuery;
 use App\Migration\Printer;
+use App\Migration\SqlQuery;
 use Override;
-use Roslov\MigrationChecker\Db\MySqlDump;
+use Roslov\MigrationChecker\Db\Dump;
 use Roslov\MigrationChecker\Db\SchemaStateComparer;
 use Roslov\MigrationChecker\MigrationChecker;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -123,7 +123,7 @@ final class CheckMigrationsCommand extends Command
         private readonly Environment $environment,
         private readonly Migration $migration,
         private readonly Printer $printer,
-        private readonly MySqlQuery $query,
+        private readonly SqlQuery $query,
     ) {
         parent::__construct();
     }
@@ -132,7 +132,7 @@ final class CheckMigrationsCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $logger = new ConsoleLogger($output);
-        $dump = new MySqlDump($this->query);
+        $dump = new Dump($this->query);
         $comparer = new SchemaStateComparer($dump);
 
         $checker = new MigrationChecker(
@@ -279,7 +279,7 @@ final class Migration implements MigrationInterface
 ```
 
 ```php
-# src/Migration/MySqlQuery.php
+# src/Migration/SqlQuery.php
 
 <?php
 
@@ -291,9 +291,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use Roslov\MigrationChecker\Contract\QueryInterface;
 
 /**
- * Fetches data from MySQL.
+ * Fetches data from SQL.
  */
-final class MySqlQuery implements QueryInterface
+final class SqlQuery implements QueryInterface
 {
     public function __construct(private readonly EntityManagerInterface $em)
     {
@@ -445,7 +445,7 @@ $migration = new YourMigrationAdapter();
 $query = new YourQueryAdapter();
 $printer = new YourPrinterAdapter();
 
-$dump = new \Roslov\MigrationChecker\Db\MySqlDump($query);
+$dump = new \Roslov\MigrationChecker\Db\Dump($query);
 $comparer = new SchemaStateComparer($dump);
 
 $checker = new MigrationChecker(

@@ -46,23 +46,23 @@ If a down migration does not fully revert the changes, the checker prints a unif
 
 ## Core concepts
 
-You connect the checker to your app by implementing these contracts:
+You connect the checker to your app by implementing these contracts from namespace `\Roslov\MigrationChecker\Contract`:
 
-- `\Roslov\MigrationChecker\Contract\EnvironmentInterface`
+- `EnvironmentInterface`
     prepares and cleans up the environment (ensure metadata tables exist, reset caches, etc.).
-- `\Roslov\MigrationChecker\Contract\MigrationInterface`
+- `MigrationInterface`
     applies the next migration up, apply the last migration down, and indicate if more migrations exist.
-- `\Roslov\MigrationChecker\Contract\QueryInterface` executes queries (used by schema dumpers).
-- `\Roslov\MigrationChecker\Contract\PrinterInterface` renders schema diffs when changes are detected.
-- `\Roslov\MigrationChecker\Contract\DatabaseDetectorInterface` _(optional)_ detects database type and version.
+- `QueryInterface` executes queries (used by schema dumpers).
+- `PrinterInterface` renders schema diffs when changes are detected.
+- `DatabaseDetectorInterface` _(optional)_ detects database type and version.
 
-The checker ships with SQL helpers:
+The checker ships with SQL helpers from namespace `\Roslov\MigrationChecker\Db`:
 
-- `\Roslov\MigrationChecker\Db\SchemaStateComparer` compares two schema dumps.
-- `\Roslov\MigrationChecker\Db\Dump` automatically detects the database type and dumps its schema.
-    It uses `\Roslov\MigrationChecker\Db\DatabaseDetector` to determine which schema dumper to use:
-    - `\Roslov\MigrationChecker\Db\MySqlDump` dumps the schema for MySQL or MariaDB.
-- `\Roslov\MigrationChecker\Db\SqlQuery` fetches data from SQL database via PDO connection.
+- `SchemaStateComparer` compares two schema dumps.
+- `Dump` automatically detects the database type and dumps its schema.
+    It uses `DatabaseDetector` to determine which schema dumper to use:
+    - `MySqlDump` dumps the schema for MySQL or MariaDB.
+- `SqlQuery` fetches data from SQL database via PDO connection.
 
 
 ## General usage
@@ -439,6 +439,8 @@ checker directly:
 
 ```php
 use Psr\Log\NullLogger;
+use Roslov\MigrationChecker\Db\DatabaseDetector;
+use Roslov\MigrationChecker\Db\Dump;
 use Roslov\MigrationChecker\Db\SchemaStateComparer;
 use Roslov\MigrationChecker\MigrationChecker;
 
@@ -447,7 +449,7 @@ $migration = new YourMigrationAdapter();
 $query = new YourQueryAdapter();
 $printer = new YourPrinterAdapter();
 
-$dump = new \Roslov\MigrationChecker\Db\Dump($query);
+$dump = new Dump($query, new DatabaseDetector($query));
 $comparer = new SchemaStateComparer($dump);
 
 $checker = new MigrationChecker(

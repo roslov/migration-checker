@@ -211,6 +211,7 @@ use Doctrine\Migrations\DependencyFactory;
 use Doctrine\Migrations\MigratorConfiguration;
 use Doctrine\Migrations\Version\Direction;
 use ReflectionClass;
+use ReflectionException;
 use Roslov\MigrationChecker\Contract\MigrationInterface;
 
 /**
@@ -276,6 +277,12 @@ final class Migration implements MigrationInterface
         $reflection = new ReflectionClass(AbstractMigration::class);
         $property = $reflection->getProperty('plannedSql');
         $property->setValue($migration, []);
+        // For newer versions and back-compatibility
+        try {
+            $property = $reflection->getProperty('frozen');
+            $property->setValue($migration, false);
+        } catch (ReflectionException) {
+        }
     }
 }
 ```
@@ -311,7 +318,11 @@ final class SqlQuery implements QueryInterface
      */
     public function execute(string $query, array $params = []): array
     {
-        return $this->em->getConnection()->prepare($query)->executeQuery($params)->fetchAllAssociative();
+        $stmt = $this->em->getConnection()->prepare($query);
+        foreach ($params as $param => $value) {
+            $stmt->bindValue($param, $value);
+        }
+        return $stmt->executeQuery()->fetchAllAssociative();
     }
 }
 ```

@@ -61,7 +61,8 @@ The checker ships with SQL helpers from namespace `\Roslov\MigrationChecker\Db`:
 - `SchemaStateComparer` compares two schema dumps.
 - `Dump` automatically detects the database type and dumps its schema.
     It uses `DatabaseDetector` to determine which schema dumper to use:
-    - `MySqlDump` dumps the schema for MySQL or MariaDB.
+    - `MySqlDump` dumps the schema for MySQL or MariaDB,
+    - `PostgreSqlDump` dumps the schema for PostgreSQL.
 - `SqlQuery` fetches data from SQL database via PDO connection.
 
 

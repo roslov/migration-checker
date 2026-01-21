@@ -52,6 +52,7 @@ final class Dump implements DumpInterface
         return match ($dbType) {
             DatabaseType::MySql,
             DatabaseType::MariaDd => new MySqlDump($this->query),
+            DatabaseType::PostgreSql => new PostgreSqlDump($this->query),
             default => throw new UnknownDatabaseTypeException(
                 sprintf('Unsupported database type: %s', $dbType->value),
             ),

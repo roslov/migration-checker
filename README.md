@@ -19,6 +19,7 @@ states, and printing readable diffs.
 
 - MySQL 5.5 to 9.5+
 - MariaDB 10.0 to 12.1+
+- PostgreSQL 11.0 to 18.1+
 
 
 ## Installation

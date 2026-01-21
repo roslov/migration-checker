@@ -74,7 +74,7 @@ final class MySqlDumpTest extends Unit
     }
 
     /**
-     * Returns test cases for type and version detection.
+     * Returns test cases.
      *
      * @return array{0: int, 1: string[]}[] Test cases
      */

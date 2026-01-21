@@ -7,14 +7,14 @@ namespace Db\Db;
 use Codeception\Attribute\DataProvider;
 use Codeception\Test\Unit;
 use PHPUnit\Framework\Attributes\CoversClass;
-use Roslov\MigrationChecker\Db\MySqlDump;
+use Roslov\MigrationChecker\Db\MySqlDumper;
 use Roslov\MigrationChecker\Db\SqlQuery;
 use Roslov\MigrationChecker\Tests\Support\DbTester;
 
 /**
  * Tests the MySQL dump fetcher.
  */
-#[CoversClass(MySqlDump::class)]
+#[CoversClass(MySqlDumper::class)]
 final class MySqlDumpTest extends Unit
 {
     /**
@@ -42,7 +42,7 @@ final class MySqlDumpTest extends Unit
             $I->getUsername($imageType),
             $I->getPassword(),
         );
-        $dumper = new MySqlDump($query);
+        $dumper = new MySqlDumper($query);
         foreach ($this->getMigrations() as $migration) {
             codecept_debug($migration);
             $query->execute($migration);

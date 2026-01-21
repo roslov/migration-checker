@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Roslov\MigrationChecker\Db;
 
 use Roslov\MigrationChecker\Contract\DatabaseDetectorInterface;
-use Roslov\MigrationChecker\Contract\DumpInterface;
+use Roslov\MigrationChecker\Contract\DumperInterface;
 use Roslov\MigrationChecker\Contract\QueryInterface;
 use Roslov\MigrationChecker\Contract\StateInterface;
 use Roslov\MigrationChecker\Enum\DatabaseType;
@@ -15,7 +15,7 @@ use Roslov\MigrationChecker\Exception\UnknownDatabaseVersionException;
 /**
  * Detects the database type and fetches its dump.
  */
-final class Dump implements DumpInterface
+final class Dumper implements DumperInterface
 {
     /**
      * Constructor.
@@ -40,19 +40,19 @@ final class Dump implements DumpInterface
     /**
      * Returns the appropriate dumper for the detected database type.
      *
-     * @return DumpInterface Dumper
+     * @return DumperInterface Dumper
      *
      * @throws UnknownDatabaseTypeException If the database type is not supported
      * @throws UnknownDatabaseVersionException If the database version is not supported
      */
-    private function getDumper(): DumpInterface
+    private function getDumper(): DumperInterface
     {
         $dbType = $this->detector->getType();
 
         return match ($dbType) {
             DatabaseType::MySql,
-            DatabaseType::MariaDd => new MySqlDump($this->query),
-            DatabaseType::PostgreSql => new PostgreSqlDump($this->query),
+            DatabaseType::MariaDd => new MySqlDumper($this->query),
+            DatabaseType::PostgreSql => new PostgreSqlDumper($this->query),
             default => throw new UnknownDatabaseTypeException(
                 sprintf('Unsupported database type: %s', $dbType->value),
             ),

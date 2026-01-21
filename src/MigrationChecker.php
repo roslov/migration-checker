@@ -4,44 +4,48 @@ declare(strict_types=1);
 
 namespace Roslov\MigrationChecker;
 
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Roslov\MigrationChecker\Contract\DatabaseDetectorInterface;
 use Roslov\MigrationChecker\Contract\EnvironmentInterface;
+use Roslov\MigrationChecker\Contract\MigrationCheckerInterface;
 use Roslov\MigrationChecker\Contract\MigrationInterface;
 use Roslov\MigrationChecker\Contract\PrinterInterface;
 use Roslov\MigrationChecker\Contract\SchemaStateComparerInterface;
 use Roslov\MigrationChecker\Exception\SchemaDiffersException;
-use Throwable;
 
 /**
  * Checks whether all up and down migrations run without errors.
  */
-final class MigrationChecker
+final class MigrationChecker implements MigrationCheckerInterface, LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+
     /**
      * Constructor.
      *
-     * @param LoggerInterface $logger Logger
      * @param EnvironmentInterface $environment Database environment
      * @param MigrationInterface $migration Migration handler
      * @param SchemaStateComparerInterface $comparer Database schema comparer
      * @param PrinterInterface $printer Schema difference printer
      * @param DatabaseDetectorInterface|null $detector Database detector (if needed for debug information)
+     * @param LoggerInterface|null $logger Logger
      */
     public function __construct(
-        private readonly LoggerInterface $logger,
         private readonly EnvironmentInterface $environment,
         private readonly MigrationInterface $migration,
         private readonly SchemaStateComparerInterface $comparer,
         private readonly PrinterInterface $printer,
         private readonly ?DatabaseDetectorInterface $detector = null,
+        ?LoggerInterface $logger = null,
     ) {
+        $this->setLogger($logger ?? new NullLogger());
     }
 
     /**
-     * Checks whether all up and down migrations run without errors.
-     *
-     * @throws Throwable On failure
+     * @inheritDoc
      */
     public function check(): void
     {

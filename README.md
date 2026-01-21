@@ -60,10 +60,10 @@ You connect the checker to your app by implementing these contracts from namespa
 The checker ships with SQL helpers from namespace `\Roslov\MigrationChecker\Db`:
 
 - `SchemaStateComparer` compares two schema dumps.
-- `Dump` automatically detects the database type and dumps its schema.
+- `Dumper` automatically detects the database type and dumps its schema.
     It uses `DatabaseDetector` to determine which schema dumper to use:
-    - `MySqlDump` dumps the schema for MySQL or MariaDB,
-    - `PostgreSqlDump` dumps the schema for PostgreSQL.
+    - `MySqlDumper` dumps the schema for MySQL or MariaDB,
+    - `PostgreSqlDumper` dumps the schema for PostgreSQL.
 - `SqlQuery` fetches data from SQL database via PDO connection.
 
 
@@ -107,7 +107,7 @@ use App\Migration\Printer;
 use App\Migration\SqlQuery;
 use Override;
 use Roslov\MigrationChecker\Db\DatabaseDetector;
-use Roslov\MigrationChecker\Db\Dump;
+use Roslov\MigrationChecker\Db\Dumper;
 use Roslov\MigrationChecker\Db\SchemaStateComparer;
 use Roslov\MigrationChecker\MigrationChecker;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -136,15 +136,16 @@ final class CheckMigrationsCommand extends Command
     {
         $logger = new ConsoleLogger($output);
         $detector = new DatabaseDetector($this->query);
-        $dump = new Dump($this->query, $detector);
-        $comparer = new SchemaStateComparer($dump);
+        $dumper = new Dumper($this->query, $detector);
+        $comparer = new SchemaStateComparer($dumper);
 
         $checker = new MigrationChecker(
-            $logger,
             $this->environment,
             $this->migration,
             $comparer,
             $this->printer,
+            $detector,
+            $logger,
         );
 
         $checker->check();
@@ -453,7 +454,7 @@ checker directly:
 ```php
 use Psr\Log\NullLogger;
 use Roslov\MigrationChecker\Db\DatabaseDetector;
-use Roslov\MigrationChecker\Db\Dump;
+use Roslov\MigrationChecker\Db\Dumper;
 use Roslov\MigrationChecker\Db\SchemaStateComparer;
 use Roslov\MigrationChecker\MigrationChecker;
 
@@ -462,15 +463,18 @@ $migration = new YourMigrationAdapter();
 $query = new YourQueryAdapter();
 $printer = new YourPrinterAdapter();
 
-$dump = new Dump($query, new DatabaseDetector($query));
-$comparer = new SchemaStateComparer($dump);
+$logger = new NullLogger();
+$detector = new DatabaseDetector($query)
+$dumper = new Dumper($query, $detector);
+$comparer = new SchemaStateComparer($dumper);
 
 $checker = new MigrationChecker(
-    new NullLogger(),
     $environment,
     $migration,
     $comparer,
     $printer,
+    $detector,
+    $logger,
 );
 
 $checker->check();

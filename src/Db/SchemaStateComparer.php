@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Roslov\MigrationChecker\Db;
 
-use Roslov\MigrationChecker\Contract\DumpInterface;
+use Roslov\MigrationChecker\Contract\DumperInterface;
 use Roslov\MigrationChecker\Contract\SchemaStateComparerInterface;
 use Roslov\MigrationChecker\Contract\StateInterface;
 
@@ -26,9 +26,9 @@ final class SchemaStateComparer implements SchemaStateComparerInterface
     /**
      * Constructor.
      *
-     * @param DumpInterface $dump Dump fetcher
+     * @param DumperInterface $dumper Dump fetcher
      */
-    public function __construct(private readonly DumpInterface $dump)
+    public function __construct(private readonly DumperInterface $dumper)
     {
         $this->currentState = new State('');
         $this->previousState = new State('');
@@ -40,7 +40,7 @@ final class SchemaStateComparer implements SchemaStateComparerInterface
     public function saveState(): void
     {
         $this->previousState = $this->currentState;
-        $this->currentState = $this->dump->getDump();
+        $this->currentState = $this->dumper->getDump();
     }
 
     /**

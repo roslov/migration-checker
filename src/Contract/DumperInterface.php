@@ -7,10 +7,10 @@ namespace Roslov\MigrationChecker\Contract;
 /**
  * Interface: Fetches the database schema/dump.
  */
-interface DumpInterface
+interface DumperInterface
 {
     /**
-     * Returns the database dump suitable for dump comparison.
+     * Returns the database dump suitable for comparison.
      *
      * @return StateInterface Dump
      */

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Roslov\MigrationChecker\Db;
 
-use Roslov\MigrationChecker\Contract\DumpInterface;
+use Roslov\MigrationChecker\Contract\DumperInterface;
 use Roslov\MigrationChecker\Contract\QueryInterface;
 use Roslov\MigrationChecker\Contract\StateInterface;
 use Roslov\MigrationChecker\Db\Helper\MySqlDdlCanonicalizer;
@@ -13,7 +13,7 @@ use Roslov\MigrationChecker\Exception\NoDatabaseUsedException;
 /**
  * Fetches the MySQL dump.
  */
-final class MySqlDump implements DumpInterface
+final class MySqlDumper implements DumperInterface
 {
     /**
      * Constructor.

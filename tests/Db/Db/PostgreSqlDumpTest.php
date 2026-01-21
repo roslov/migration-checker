@@ -7,14 +7,14 @@ namespace Db\Db;
 use Codeception\Attribute\DataProvider;
 use Codeception\Test\Unit;
 use PHPUnit\Framework\Attributes\CoversClass;
-use Roslov\MigrationChecker\Db\PostgreSqlDump;
+use Roslov\MigrationChecker\Db\PostgreSqlDumper;
 use Roslov\MigrationChecker\Db\SqlQuery;
 use Roslov\MigrationChecker\Tests\Support\DbTester;
 
 /**
  * Tests the PostgreSql dump fetcher.
  */
-#[CoversClass(PostgreSqlDump::class)]
+#[CoversClass(PostgreSqlDumper::class)]
 final class PostgreSqlDumpTest extends Unit
 {
     /**
@@ -40,7 +40,7 @@ final class PostgreSqlDumpTest extends Unit
             $I->getUsername($imageType),
             $I->getPassword(),
         );
-        $dumper = new PostgreSqlDump($query);
+        $dumper = new PostgreSqlDumper($query);
         foreach ($this->getMigrations() as $migration) {
             codecept_debug($migration);
             $query->execute($migration);

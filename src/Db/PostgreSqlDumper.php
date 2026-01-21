@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Roslov\MigrationChecker\Db;
 
-use Roslov\MigrationChecker\Contract\DumpInterface;
+use Roslov\MigrationChecker\Contract\DumperInterface;
 use Roslov\MigrationChecker\Contract\QueryInterface;
 use Roslov\MigrationChecker\Contract\StateInterface;
 
 /**
  * Fetches the PostgreSQL dump.
  */
-final class PostgreSqlDump implements DumpInterface
+final class PostgreSqlDumper implements DumperInterface
 {
     /**
      * Constructor.

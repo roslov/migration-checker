@@ -61,12 +61,12 @@ final class MySqlDumper implements DumperInterface
      */
     private function getTableDump(): string
     {
-        $sql = <<<'SQL'
+        $sql = <<<'SQL_WRAP'
             SELECT table_name AS table_name, table_type AS table_type
             FROM information_schema.tables
             WHERE table_schema = :dbName AND TABLE_TYPE = 'BASE TABLE'
             ORDER BY table_name;
-            SQL;
+            SQL_WRAP;
         $tables = $this->query->execute($sql, ['dbName' => $this->getDbName()]);
         $dump = [];
         foreach ($tables as $row) {
@@ -89,12 +89,12 @@ final class MySqlDumper implements DumperInterface
      */
     private function getViewDump(): string
     {
-        $sql = <<<'SQL'
+        $sql = <<<'SQL_WRAP'
             SELECT table_name AS table_name, table_type AS table_type
             FROM information_schema.tables
             WHERE table_schema = :dbName AND TABLE_TYPE = 'VIEW'
             ORDER BY table_name;
-            SQL;
+            SQL_WRAP;
         $views = $this->query->execute($sql, ['dbName' => $this->getDbName()]);
         $dump = [];
         foreach ($views as $row) {
@@ -112,12 +112,12 @@ final class MySqlDumper implements DumperInterface
      */
     private function getTriggerDump(): string
     {
-        $sql = <<<'SQL'
+        $sql = <<<'SQL_WRAP'
             SELECT trigger_name AS trigger_name, event_object_table AS event_object_table
             FROM information_schema.triggers
             WHERE trigger_schema = :dbName
             ORDER BY trigger_name, event_object_table;
-            SQL;
+            SQL_WRAP;
         $triggers = $this->query->execute($sql, ['dbName' => $this->getDbName()]);
         $dump = [];
         foreach ($triggers as $row) {
@@ -139,12 +139,12 @@ final class MySqlDumper implements DumperInterface
      */
     private function getProcedureAndFunctionDump(): string
     {
-        $sql = <<<'SQL'
+        $sql = <<<'SQL_WRAP'
             SELECT routine_type AS routine_type, routine_name AS routine_name
             FROM information_schema.routines
             WHERE routine_schema = :dbName
             ORDER BY routine_type, routine_name;
-            SQL;
+            SQL_WRAP;
         $procedureFunctions = $this->query->execute($sql, ['dbName' => $this->getDbName()]);
         $dump = [];
         foreach ($procedureFunctions as $row) {
@@ -162,12 +162,12 @@ final class MySqlDumper implements DumperInterface
      */
     private function getEventDump(): string
     {
-        $sql = <<<'SQL'
+        $sql = <<<'SQL_WRAP'
             SELECT event_name AS event_name, event_definition AS event_definition, status AS status
             FROM information_schema.events
             WHERE event_schema = :dbName
             ORDER BY event_name, event_definition, status;
-            SQL;
+            SQL_WRAP;
         $events = $this->query->execute($sql, ['dbName' => $this->getDbName()]);
         $dump = [];
         foreach ($events as $row) {

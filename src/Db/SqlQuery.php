@@ -18,7 +18,7 @@ final class SqlQuery implements QueryInterface
     /**
      * PDO instance
      */
-    private ?PDO $PDO = null;
+    private ?PDO $pdo = null;
 
     /**
      * Constructor.
@@ -55,14 +55,14 @@ final class SqlQuery implements QueryInterface
         if (!class_exists(PDO::class)) {
             throw new PdoNotFoundException('PDO extension is not installed.');
         }
-        if ($this->PDO === null) {
+        if (!$this->pdo instanceof PDO) {
             $options = [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false,
             ];
             try {
-                $this->PDO = new PDO($this->dsn, $this->user, $this->password, $options);
+                $this->pdo = new PDO($this->dsn, $this->user, $this->password, $options);
             } catch (PDOException $e) {
                 throw new DatabaseConnectionFailedException(
                     message: 'Failed to connect to the database: ' . $e->getMessage(),
@@ -71,6 +71,6 @@ final class SqlQuery implements QueryInterface
             }
         }
 
-        return $this->PDO;
+        return $this->pdo;
     }
 }

@@ -111,10 +111,10 @@ final class MySqlDumpTest extends Unit
     private function getMigrations(): array
     {
         return [
-            <<<'SQL_WRAPPER'
+            <<<'SQL_WRAP'
                 SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 CREATE TABLE pet (
                     id int(11) NOT NULL AUTO_INCREMENT,
                     type enum('dog', 'cat') NOT NULL COMMENT 'Pet type',
@@ -122,15 +122,15 @@ final class MySqlDumpTest extends Unit
                     owner_id int(11) NOT NULL,
                     PRIMARY KEY (id)
                 ) COMMENT='Pets'
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 CREATE TABLE info (
                     id int(11) NOT NULL AUTO_INCREMENT,
                     name varchar(255) NOT NULL,
                     PRIMARY KEY (id)
                 ) COMMENT='Pet info'
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 CREATE TABLE owner (
                     id int(11) NOT NULL AUTO_INCREMENT,
                     first_name varchar(50) NOT NULL,
@@ -138,45 +138,45 @@ final class MySqlDumpTest extends Unit
                     code char(8) NOT NULL,
                     PRIMARY KEY (`id`)
                 ) COMMENT='Owner'
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 ALTER TABLE pet
                     ADD CONSTRAINT fk_owner FOREIGN KEY (owner_id) REFERENCES owner(id)
                         ON DELETE CASCADE ON UPDATE CASCADE,
                     ADD CONSTRAINT fk_info FOREIGN KEY (info_id) REFERENCES info(id)
                         ON DELETE CASCADE ON UPDATE CASCADE
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 ALTER TABLE owner
                     ADD UNIQUE KEY idx_name (first_name, last_name)
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 ALTER TABLE owner
                     ADD KEY idx_last_name (last_name),
                     ADD KEY idx_first_name (first_name)
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 CREATE
                     SQL SECURITY INVOKER
                 VIEW vw_pet
                 AS
                     SELECT id, type FROM pet
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 CREATE TRIGGER `before_owner_update` BEFORE UPDATE ON `owner` FOR EACH ROW BEGIN
                     IF new.first_name = 'John' THEN
                         SET new.last_name = 'Doe';
                     END IF;
                 END
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 CREATE PROCEDURE rename_to_john_doe(IN owner_id int)
                     SQL SECURITY INVOKER
                 BEGIN
                     UPDATE owner SET first_name = 'John', last_name = 'Doe' WHERE id = owner_id;
                 END
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 CREATE FUNCTION get_full_name(owner_id INT)
                     RETURNS varchar(150)
                     SQL SECURITY INVOKER
@@ -188,8 +188,8 @@ final class MySqlDumpTest extends Unit
                         WHERE id = owner_id;
                     RETURN full_name;
                 END
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 CREATE
                 EVENT rename_first_owner
                     ON SCHEDULE EVERY '1' DAY
@@ -198,10 +198,10 @@ final class MySqlDumpTest extends Unit
                 BEGIN
                     CALL rename_to_john_doe(1);
                 END
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 ALTER EVENT rename_first_owner ENABLE
-                SQL_WRAPPER,
+                SQL_WRAP,
         ];
     }
 

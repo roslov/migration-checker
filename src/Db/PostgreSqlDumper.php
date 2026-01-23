@@ -27,7 +27,7 @@ final class PostgreSqlDumper implements DumperInterface
      */
     public function getDump(): StateInterface
     {
-        $sql = <<<'SQL_WRAPPER'
+        $sql = <<<'SQL_WRAP'
             -- /* PostgreSQL 11, 12, 13, 14, 15, 16, 17, 18 Schema Dump Script */
             WITH schema_dump AS (
                 -- 0. SEQUENCES
@@ -149,7 +149,7 @@ final class PostgreSqlDumper implements DumperInterface
             SELECT ddl
             FROM schema_dump
             ORDER BY sort_order, sort_name, ddl;
-            SQL_WRAPPER;
+            SQL_WRAP;
         $rows = $this->query->execute($sql);
         $ddl = array_column($rows, 'ddl');
         $dump = trim(implode("\n", $ddl));

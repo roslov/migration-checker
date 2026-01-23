@@ -43,11 +43,16 @@ test: ## Run all tests
 test-debug: ## Run all tests with debugging mode enabled
 	docker compose run --rm -e XDEBUG_MODE=debug,develop app codecept run Unit,Db --debug
 
+validate: syntax phpcs ## Do all validations (coding style, PHP syntax, static analysis, etc.)
+
 phpcs: ## Validate the coding style
 	docker compose run --rm app phpcs --extensions=php --colors --standard=PSR12Ext --runtime-set php_version 80100 --ignore=vendor/* -p -s .
 
 phpcbf: ## Fix the coding style
 	docker compose run --rm app phpcbf --extensions=php --colors --standard=PSR12Ext --runtime-set php_version 80100 --ignore=vendor/* -p .
+
+syntax: ## Validate PHP syntax
+	docker compose run --rm app ./vendor/bin/parallel-lint --colors src tests
 
 # Output the help for each task, see https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 help: ## This help

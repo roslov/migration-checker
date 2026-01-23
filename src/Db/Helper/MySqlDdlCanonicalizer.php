@@ -66,12 +66,12 @@ final class MySqlDdlCanonicalizer
      * @param string $body Body
      *
      * @return array{
-     *     0: string,
-     *     1: string,
-     *     2: string,
-     *     3: string,
-     *     4: string
-     * }[] Columns, primary keys, keys, constraints, and others
+     *     0: string[],
+     *     1: string[],
+     *     2: string[],
+     *     3: string[],
+     *     4: string[]
+     * } Columns, primary keys, keys, constraints, and others
      *
      * @todo Decrease cognitive complexity
      */
@@ -145,7 +145,7 @@ final class MySqlDdlCanonicalizer
         foreach ($raw as $line) {
             $line = rtrim($line);
             $line = preg_replace('/,\s*\z/', '', $line);
-            $lines[] = $line;
+            $lines[] = (string) $line;
         }
 
         return $lines;

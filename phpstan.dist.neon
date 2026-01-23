@@ -1,0 +1,9 @@
+parameters:
+    treatPhpDocTypesAsCertain: false
+    level: 9
+    paths:
+        - src/
+        - tests/
+    excludePaths:
+        - tests/Support/_generated/
+        - vendor/

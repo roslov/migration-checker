@@ -46,6 +46,7 @@ jobs:
 
   coding-style:
     name: Coding style
+    needs: syntax
     runs-on: ubuntu-latest
 
     steps:
@@ -67,4 +68,26 @@ jobs:
             --ignore=vendor/* \
             -p \
             -s \
+            .
+
+
+  phpstan:
+    name: PHPStan
+    needs: syntax
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up the project
+        uses: ./.github/actions/setup-project
+        with:
+          php: 8.5
+
+      - name: Static analysis
+        run: |
+          vendor/bin/codecept build
+          vendor/bin/phpstan analyse \
+            --memory-limit=256M \
             .

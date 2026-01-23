@@ -1,23 +1,17 @@
 on:
   pull_request:
-    paths-ignore:
+    paths-ignore: &paths_ignore
       - 'docs/**'
       - 'README.md'
       - 'CHANGELOG.md'
       - '.gitignore'
       - '.gitattributes'
       - 'infection.json.dist'
+      - Makefile
       - 'psalm.xml'
 
   push:
-    paths-ignore:
-      - 'docs/**'
-      - 'README.md'
-      - 'CHANGELOG.md'
-      - '.gitignore'
-      - '.gitattributes'
-      - 'infection.json.dist'
-      - 'psalm.xml'
+    paths-ignore: *paths_ignore
 
 name: DB integration tests
 

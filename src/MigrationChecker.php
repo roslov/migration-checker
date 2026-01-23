@@ -52,7 +52,7 @@ final class MigrationChecker implements MigrationCheckerInterface, LoggerAwareIn
         $logger = $this->getLogger();
         $logger->info('Migration check started.');
 
-        if ($this->detector !== null) {
+        if ($this->detector instanceof DatabaseDetectorInterface) {
             $dbType = $this->detector->getType()->value;
             $dbVersion = $this->detector->getVersion();
             $logger->info(sprintf('Database type: %s', $dbType));
@@ -119,7 +119,7 @@ final class MigrationChecker implements MigrationCheckerInterface, LoggerAwareIn
      */
     private function getLogger(): LoggerInterface
     {
-        if ($this->logger === null) {
+        if (!$this->logger instanceof LoggerInterface) {
             $this->logger = new NullLogger();
         }
 

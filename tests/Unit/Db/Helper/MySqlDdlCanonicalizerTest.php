@@ -38,7 +38,7 @@ final class MySqlDdlCanonicalizerTest extends Unit
         // phpcs:disable Generic.Files.LineLength.TooLong
         return [
             'non-sorted keys' => [
-                <<<'SQL'
+                <<<'SQL_WRAP'
                     CREATE TABLE `campaign` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
                       `tenant_id` int(11) NOT NULL COMMENT 'Tenant',
@@ -56,8 +56,8 @@ final class MySqlDdlCanonicalizerTest extends Unit
                       CONSTRAINT `fk_campaign_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
                       CONSTRAINT `fk_campaign_client` FOREIGN KEY (`client_id`) REFERENCES `client` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Campaigns'
-                    SQL,
-                <<<'SQL'
+                    SQL_WRAP,
+                <<<'SQL_WRAP'
                     CREATE TABLE `campaign` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
                       `tenant_id` int(11) NOT NULL COMMENT 'Tenant',
@@ -75,10 +75,10 @@ final class MySqlDdlCanonicalizerTest extends Unit
                       CONSTRAINT `fk_campaign_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `tenant` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
                       CONSTRAINT `fk_campaign_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Campaigns'
-                    SQL,
+                    SQL_WRAP,
             ],
             'sorted keys' => [
-                <<<'SQL'
+                <<<'SQL_WRAP'
                     CREATE TABLE `campaign` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
                       `tenant_id` int(11) NOT NULL COMMENT 'Tenant',
@@ -96,8 +96,8 @@ final class MySqlDdlCanonicalizerTest extends Unit
                       CONSTRAINT `fk_campaign_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `tenant` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
                       CONSTRAINT `fk_campaign_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Campaigns'
-                    SQL,
-                <<<'SQL'
+                    SQL_WRAP,
+                <<<'SQL_WRAP'
                     CREATE TABLE `campaign` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
                       `tenant_id` int(11) NOT NULL COMMENT 'Tenant',
@@ -115,25 +115,25 @@ final class MySqlDdlCanonicalizerTest extends Unit
                       CONSTRAINT `fk_campaign_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `tenant` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
                       CONSTRAINT `fk_campaign_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Campaigns'
-                    SQL,
+                    SQL_WRAP,
             ],
             'non-table' => [
-                <<<'SQL'
+                <<<'SQL_WRAP'
                     CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`%` SQL SECURITY INVOKER VIEW `vw_api_clients` AS
                     select
                         `client`.`id` AS `clientId`,
                         `client`.`tokenHash` AS `tokenHash`,
                         `client`.`tag` AS `tag`
                     from `client`
-                    SQL,
-                <<<'SQL'
+                    SQL_WRAP,
+                <<<'SQL_WRAP'
                     CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`%` SQL SECURITY INVOKER VIEW `vw_api_clients` AS
                     select
                         `client`.`id` AS `clientId`,
                         `client`.`tokenHash` AS `tokenHash`,
                         `client`.`tag` AS `tag`
                     from `client`
-                    SQL,
+                    SQL_WRAP,
             ],
         ];
         // phpcs:enable Generic.Files.LineLength.TooLong

@@ -108,22 +108,22 @@ final class PostgreSqlDumpTest extends Unit
     private function getMigrations(): array
     {
         return [
-            <<<'SQL_WRAPPER'
+            <<<'SQL_WRAP'
                 SET client_encoding = 'UTF8'
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 CREATE TYPE pet_type AS ENUM ('dog', 'cat')
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 CREATE TABLE info (
                     id SERIAL PRIMARY KEY,
                     name varchar(255) NOT NULL
                 )
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 COMMENT ON TABLE info IS 'Pet info'
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 CREATE TABLE owner (
                     id SERIAL PRIMARY KEY,
                     first_name varchar(50) NOT NULL,
@@ -131,17 +131,17 @@ final class PostgreSqlDumpTest extends Unit
                     code char(8) NOT NULL,
                     CONSTRAINT idx_name UNIQUE (first_name, last_name)
                 )
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 COMMENT ON TABLE owner IS 'Owner'
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 CREATE INDEX idx_last_name ON owner (last_name)
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 CREATE INDEX idx_first_name ON owner (first_name)
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 CREATE TABLE pet (
                     id SERIAL PRIMARY KEY,
                     type pet_type NOT NULL,
@@ -152,18 +152,18 @@ final class PostgreSqlDumpTest extends Unit
                     CONSTRAINT fk_info FOREIGN KEY (info_id) REFERENCES info(id)
                         ON DELETE CASCADE ON UPDATE CASCADE
                 )
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 COMMENT ON TABLE pet IS 'Pets'
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 COMMENT ON COLUMN pet.type IS 'Pet type'
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 CREATE VIEW vw_pet AS
                     SELECT id, type FROM pet
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 CREATE OR REPLACE FUNCTION before_owner_update_func()
                 RETURNS TRIGGER AS $$
                 BEGIN
@@ -173,21 +173,21 @@ final class PostgreSqlDumpTest extends Unit
                     RETURN NEW;
                 END;
                 $$ LANGUAGE plpgsql
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 CREATE TRIGGER before_owner_update
                     BEFORE UPDATE ON owner
                     FOR EACH ROW
                     EXECUTE FUNCTION before_owner_update_func()
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 CREATE OR REPLACE PROCEDURE rename_to_john_doe(owner_id_param int)
                 LANGUAGE sql
                 AS $$
                     UPDATE owner SET first_name = 'John', last_name = 'Doe' WHERE id = owner_id_param;
                 $$
-                SQL_WRAPPER,
-            <<<'SQL_WRAPPER'
+                SQL_WRAP,
+            <<<'SQL_WRAP'
                 CREATE OR REPLACE FUNCTION get_full_name(owner_id_param INT)
                     RETURNS varchar(150)
                     LANGUAGE plpgsql
@@ -202,7 +202,7 @@ final class PostgreSqlDumpTest extends Unit
                     RETURN full_name;
                 END;
                 $$
-                SQL_WRAPPER,
+                SQL_WRAP,
         ];
     }
 

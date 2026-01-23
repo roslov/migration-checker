@@ -43,7 +43,7 @@ test: ## Run all tests
 test-debug: ## Run all tests with debugging mode enabled
 	docker compose run --rm -e XDEBUG_MODE=debug,develop app codecept run Unit,Db --debug
 
-validate: syntax phpcs phpstan ## Do all validations (coding style, PHP syntax, static analysis, etc.)
+validate: syntax phpcs phpstan rector ## Do all validations (coding style, PHP syntax, static analysis, etc.)
 
 phpcs: ## Validate the coding style
 	docker compose run --rm app phpcs --extensions=php --colors --standard=PSR12Ext --runtime-set php_version 80100 --ignore=vendor/* -p -s .
@@ -56,6 +56,9 @@ syntax: ## Validate PHP syntax
 
 phpstan: ## Do static analysis with PHPStan
 	docker compose run --rm app phpstan analyse --memory-limit=256M .
+
+rector: ## Do code analysis with Rector
+	docker compose run --rm app rector --dry-run
 
 # Output the help for each task, see https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 help: ## This help

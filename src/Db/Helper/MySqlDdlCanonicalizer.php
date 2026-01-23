@@ -42,11 +42,14 @@ final class MySqlDdlCanonicalizer
         // Sorts KEY and CONSTRAINT deterministically by their name (or full line fallback)
         usort(
             $keys,
-            fn ($a, $b) => strcmp($this->extractKeyName($a), $this->extractKeyName($b)),
+            fn (string $a, string $b): int => strcmp($this->extractKeyName($a), $this->extractKeyName($b)),
         );
         usort(
             $constraints,
-            fn ($a, $b) => strcmp($this->extractConstraintName($a), $this->extractConstraintName($b)),
+            fn (string $a, string $b): int => strcmp(
+                $this->extractConstraintName($a),
+                $this->extractConstraintName($b),
+            ),
         );
         sort($others);
 
@@ -215,7 +218,7 @@ final class MySqlDdlCanonicalizer
     private function ensureCommas(array $lines): array
     {
         $lineCount = count($lines);
-        if (!$lineCount) {
+        if ($lineCount === 0) {
             return $lines;
         }
 

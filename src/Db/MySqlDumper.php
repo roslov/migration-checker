@@ -73,7 +73,7 @@ final class MySqlDumper implements DumperInterface
             $sql = sprintf('SHOW CREATE TABLE `%s`', $row['table_name']);
             $entry = $this->query->execute($sql)[0] ?? [];
             if (isset($entry['Create Table'])) {
-                $entry['Create Table'] = $this->canonicalizeCreateTable($entry['Create Table']);
+                $entry['Create Table'] = $this->canonicalizeCreateTable((string) $entry['Create Table']);
             }
             $rowDump = $this->dumpRow($entry);
             $dump[] = $this->removeAutoIncrement($rowDump);
@@ -188,7 +188,7 @@ final class MySqlDumper implements DumperInterface
         $row = $this->query->execute('SELECT DATABASE()')[0]
         ?? throw new NoDatabaseUsedException('Use a database first.');
 
-        return reset($row) ?: throw new NoDatabaseUsedException('Cannot get the database name.');
+        return (string) reset($row) ?: throw new NoDatabaseUsedException('Cannot get the database name.');
     }
 
     /**
@@ -217,7 +217,7 @@ final class MySqlDumper implements DumperInterface
      */
     private function removeAutoIncrement(string $sql): string
     {
-        return preg_replace('/\s+AUTO_INCREMENT *= *\d+(\s+)/i', '$1', $sql);
+        return (string) preg_replace('/\s+AUTO_INCREMENT *= *\d+(\s+)/i', '$1', $sql);
     }
 
     /**

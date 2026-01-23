@@ -224,7 +224,7 @@ final class PostgreSqlDumpTest extends Unit
             default => 'postgresql.dump.18.expected.sql',
         };
 
-        return file_get_contents(codecept_data_dir($filename));
+        return (string) file_get_contents(codecept_data_dir($filename));
     }
 
     /**
@@ -234,6 +234,6 @@ final class PostgreSqlDumpTest extends Unit
      */
     private function trimRowWhitespaces(string $dump): string
     {
-        return preg_replace('#\s*\n\s*#', "\n", $dump);
+        return (string) preg_replace('#\s*\n\s*#', "\n", $dump);
     }
 }

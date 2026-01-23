@@ -67,7 +67,7 @@ final class DatabaseDetectorTest extends Unit
     /**
      * Returns test cases for type and version detection.
      *
-     * @return array{0: string, 1: array{0: string, 1: string}}[] Test cases
+     * @return array<string, array{0: string, 1: string, 2: string, 3: string|null}> Test cases
      */
     public static function dbProvider(): array
     {

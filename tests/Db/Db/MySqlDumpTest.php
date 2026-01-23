@@ -76,7 +76,7 @@ final class MySqlDumpTest extends Unit
     /**
      * Returns test cases.
      *
-     * @return array{0: int, 1: string[]}[] Test cases
+     * @return array<string, string[]> Test cases
      */
     public static function dbProvider(): array
     {
@@ -249,11 +249,11 @@ final class MySqlDumpTest extends Unit
                 $sqlMode,
                 "DEFINER=`$user`@`%`",
             ],
-            $dump,
+            (string) $dump,
         );
 
         // Minor dump change for versions before MySQL 8 of for MariaDB
-        $majorVersion = (int) explode('.', $version)[0];
+        $majorVersion = (int) explode('.', (string) $version)[0];
         if ($imageType === 'mysql' && $majorVersion < 8 || $imageType === 'mariadb') {
             $dump = str_replace('int ', 'int(11) ', $dump);
         }

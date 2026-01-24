@@ -27,4 +27,12 @@ final class State implements StateInterface
     {
         return $this->dump;
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function isEmpty(): bool
+    {
+        return trim($this->dump) === '';
+    }
 }

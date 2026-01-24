@@ -11,7 +11,7 @@ use Roslov\MigrationChecker\Db\SqlQuery;
 use Roslov\MigrationChecker\Tests\Support\DbTester;
 
 /**
- * Tests database detection against different databases
+ * Tests database detection against different databases.
  */
 final class DatabaseDetectorTest extends Unit
 {

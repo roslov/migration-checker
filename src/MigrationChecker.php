@@ -14,6 +14,7 @@ use Roslov\MigrationChecker\Contract\MigrationCheckerInterface;
 use Roslov\MigrationChecker\Contract\MigrationInterface;
 use Roslov\MigrationChecker\Contract\PrinterInterface;
 use Roslov\MigrationChecker\Contract\SchemaStateComparerInterface;
+use Roslov\MigrationChecker\Exception\NonEmptyDatabaseException;
 use Roslov\MigrationChecker\Exception\SchemaDiffersException;
 
 /**
@@ -57,6 +58,11 @@ final class MigrationChecker implements MigrationCheckerInterface, LoggerAwareIn
             $dbVersion = $this->detector->getVersion();
             $logger->info(sprintf('Database type: %s', $dbType));
             $logger->info(sprintf('Database version: %s', $dbVersion ?? 'n/a'));
+        }
+
+        $logger->info('Checking if database is empty before running migrations...');
+        if (!$this->isEmpty()) {
+            throw new NonEmptyDatabaseException('The check should only be run on an empty database.');
         }
 
         $logger->info('Preparing migration environment...');
@@ -124,5 +130,17 @@ final class MigrationChecker implements MigrationCheckerInterface, LoggerAwareIn
         }
 
         return $this->logger;
+    }
+
+    /**
+     * Checks if the database is empty.
+     *
+     * @return bool True if the database is empty, false otherwise
+     */
+    private function isEmpty(): bool
+    {
+        $this->comparer->saveState();
+
+        return $this->comparer->getCurrentState()->isEmpty();
     }
 }

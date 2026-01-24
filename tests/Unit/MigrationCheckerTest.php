@@ -11,6 +11,7 @@ use Roslov\MigrationChecker\Contract\MigrationInterface;
 use Roslov\MigrationChecker\Contract\PrinterInterface;
 use Roslov\MigrationChecker\Contract\SchemaStateComparerInterface;
 use Roslov\MigrationChecker\Db\State;
+use Roslov\MigrationChecker\Exception\NonEmptyDatabaseException;
 use Roslov\MigrationChecker\Exception\SchemaDiffersException;
 use Roslov\MigrationChecker\MigrationChecker;
 use Roslov\MigrationChecker\Tests\Support\UnitTester;
@@ -44,6 +45,11 @@ final class MigrationCheckerTest extends Unit
         $environment->expects(self::once())->method('prepare');
         $environment->expects(self::once())->method('cleanUp');
 
+        $I->expectTo('call `getCurrentState` once to check if database is empty');
+        $comparer->expects(self::once())
+            ->method('getCurrentState')
+            ->willReturn(new State(''));
+
         $I->expect('two iterations, then stop');
         $migration->expects(self::exactly(3))
             ->method('canUp')
@@ -55,8 +61,8 @@ final class MigrationCheckerTest extends Unit
         $migration->expects(self::exactly(2))->method('down');
 
         $I->comment('per iteration: `saveState` before `up`, then `saveState` after `down` => 2 saves');
-        $I->expectTo('have two iterations → 4 saves');
-        $comparer->expects(self::exactly(4))->method('saveState');
+        $I->expectTo('have two iterations + 1 empty state → 5 saves');
+        $comparer->expects(self::exactly(5))->method('saveState');
 
         $I->expectTo('call `statesEqual` once per iteration');
         $comparer->expects(self::exactly(2))
@@ -82,8 +88,8 @@ final class MigrationCheckerTest extends Unit
     public function testFailedCheck(): void
     {
         $I = $this->tester;
-        $I->wantTo('ensure that migration check is failed');
-        $I->amGoingTo('test migration check with one non-successful iterations');
+        $I->wantTo('ensure that migration check is failed when down-migration is incorrect');
+        $I->amGoingTo('test migration check with one non-successful iteration');
 
         $environment = $this->createMock(EnvironmentInterface::class);
         $migration = $this->createMock(MigrationInterface::class);
@@ -99,17 +105,25 @@ final class MigrationCheckerTest extends Unit
             ->method('canUp')
             ->willReturn(true);
 
-        $I->expect('migration `up` and `down` methods are called once and migration state will be saved twice');
+        $I->expect('migration `up` and `down` methods are called once');
         $migration->expects(self::once())->method('up');
         $migration->expects(self::once())->method('down');
-        $comparer->expects(self::exactly(2))->method('saveState');
+
+        $I->expect(
+            'migration state is called once to check the database is empty '
+            . 'and two times for up- and down-migrations',
+        );
+        $comparer->expects(self::exactly(3))->method('saveState');
 
         $I->expect('migration state will be compared unsuccessfully and diff will be displayed');
+        $initialState = new State('');
         $previousState = new State('previous-state');
         $currentState = new State('current-state');
         $comparer->expects(self::once())->method('statesEqual')->willReturn(false);
         $comparer->expects(self::once())->method('getPreviousState')->willReturn($previousState);
-        $comparer->expects(self::once())->method('getCurrentState')->willReturn($currentState);
+        $comparer->expects(self::exactly(2))
+            ->method('getCurrentState')
+            ->willReturnOnConsecutiveCalls($initialState, $currentState);
         $printer->expects(self::once())->method('displayDiff')->with($previousState, $currentState);
 
         $checker = new MigrationChecker(
@@ -121,6 +135,53 @@ final class MigrationCheckerTest extends Unit
 
         $I->expect('the check will fail with an exception');
         $this->expectException(SchemaDiffersException::class);
+
+        $checker->check();
+    }
+
+    /**
+     * Tests non-empty database check.
+     */
+    public function testNonEmptyDatabaseCheck(): void
+    {
+        $I = $this->tester;
+        $I->wantTo('ensure that migration check is failed when database is not empty');
+        $I->amGoingTo('test migration check failure with non-empty database');
+
+        $environment = $this->createMock(EnvironmentInterface::class);
+        $migration = $this->createMock(MigrationInterface::class);
+        $comparer = $this->createMock(SchemaStateComparerInterface::class);
+        $printer = $this->createMock(PrinterInterface::class);
+
+        $I->expect('migration state is called once to check the database is empty');
+        $comparer->expects(self::once())->method('saveState');
+
+        $I->expectTo('call `getCurrentState` once to check if database is empty');
+        $comparer->expects(self::once())->method('getCurrentState')->willReturn(new State('non-empty'));
+
+        $I->expectTo('fail before iterations');
+        $migration->expects(self::never())->method('canUp');
+
+        $I->expect('migration `up` and `down` methods are never called');
+        $migration->expects(self::never())->method('up');
+        $migration->expects(self::never())->method('down');
+
+        $I->expect('the diff will not be displayed');
+        $printer->expects(self::never())->method('displayDiff');
+
+        $I->expect('migration state will be compared unsuccessfully and diff will be displayed');
+        $comparer->expects(self::never())->method('statesEqual');
+        $comparer->expects(self::never())->method('getPreviousState');
+
+        $checker = new MigrationChecker(
+            $environment,
+            $migration,
+            $comparer,
+            $printer,
+        );
+
+        $I->expect('the check will fail with an exception');
+        $this->expectException(NonEmptyDatabaseException::class);
 
         $checker->check();
     }

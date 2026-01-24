@@ -15,7 +15,7 @@ use Roslov\MigrationChecker\Tests\Support\DbTester;
  * Tests the PostgreSql dump fetcher.
  */
 #[CoversClass(PostgreSqlDumper::class)]
-final class PostgreSqlDumpTest extends Unit
+final class PostgreSqlDumperTest extends Unit
 {
     /**
      * @var DbTester Tester

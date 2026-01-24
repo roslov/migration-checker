@@ -34,22 +34,19 @@ final class MySqlDumper implements DumperInterface
         $triggers = $this->getTriggerDump();
         $proceduresAndFunctions = $this->getProcedureAndFunctionDump();
         $events = $this->getEventDump();
-        $dump = <<<DUMP
-            -- ### Tables ###
-            $tables
 
-            -- ### Views ###
-            $views
+        $items = array_filter([
+            'Tables' => $tables,
+            'Views' => $views,
+            'Triggers' => $triggers,
+            'Procedures and functions' => $proceduresAndFunctions,
+            'Events' => $events,
+        ]);
 
-            -- ### Triggers ###
-            $triggers
-
-            -- ### Procedures and functions ###
-            $proceduresAndFunctions
-
-            -- ### Events ###
-            $events
-            DUMP;
+        $dump = '';
+        foreach ($items as $name => $value) {
+            $dump .= "-- ### $name ###\n$value\n\n";
+        }
 
         return new State(trim($dump));
     }

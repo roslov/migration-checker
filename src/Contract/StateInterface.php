@@ -13,4 +13,9 @@ interface StateInterface
      * Converts the state to a string representation.
      */
     public function toString(): string;
+
+    /**
+     * Checks if the state represents an empty database.
+     */
+    public function isEmpty(): bool;
 }

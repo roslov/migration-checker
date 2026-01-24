@@ -15,7 +15,7 @@ use Roslov\MigrationChecker\Tests\Support\DbTester;
  * Tests the MySQL dump fetcher.
  */
 #[CoversClass(MySqlDumper::class)]
-final class MySqlDumpTest extends Unit
+final class MySqlDumperTest extends Unit
 {
     /**
      * @var DbTester Tester

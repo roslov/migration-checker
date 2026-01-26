@@ -15,7 +15,7 @@ interface QueryInterface
      * @param string $query Query to execute
      * @param array<int|string, mixed> $params Parameters
      *
-     * @return array<string, scalar>[] Result of the query
+     * @return array<string, scalar|null>[] Result of the query
      */
     public function execute(string $query, array $params = []): array;
 }

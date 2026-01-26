@@ -12,7 +12,7 @@ interface MigrationInterface
     /**
      * Checks whether the next migration exists and can be applied.
      *
-     * @return True if there are more migrations to be applied
+     * @return bool True if there are more migrations to be applied
      */
     public function canUp(): bool;
 

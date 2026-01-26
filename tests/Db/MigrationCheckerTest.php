@@ -87,7 +87,7 @@ final class MigrationCheckerTest extends Unit
             ['mysql', '8.4.5'],
             ['mariadb', '10.11.15'],
             ['postgresql', '17.7-alpine'],
-//            ['sqlite', ''],
+            ['sqlite', ''],
 //            ['sqlserver', '2022-CU21-ubuntu-22.04'],
 //            ['oracle', '21.3.0-slim'],
         ];

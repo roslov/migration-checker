@@ -191,7 +191,7 @@ final class MySqlDumper implements DumperInterface
     /**
      * Dumps the row into a string representation.
      *
-     * @param array<string, scalar> $row The row from the query result
+     * @param array<string, scalar|null> $row The row from the query result
      *
      * @return string The dump of the row
      */

@@ -53,6 +53,7 @@ final class Dumper implements DumperInterface
             DatabaseType::MySql,
             DatabaseType::MariaDd => new MySqlDumper($this->query),
             DatabaseType::PostgreSql => new PostgreSqlDumper($this->query),
+            DatabaseType::SqLite => new SqLiteDumper($this->query),
             default => throw new UnknownDatabaseTypeException(
                 sprintf('Unsupported database type: %s', $dbType->value),
             ),

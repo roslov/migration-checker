@@ -20,6 +20,7 @@ states, and printing readable diffs.
 - MySQL 5.5 to 9.5+
 - MariaDB 10.0 to 12.1+
 - PostgreSQL 11.0 to 18.1+
+- SQLite 3.x
 
 
 ## Installation
@@ -63,7 +64,8 @@ The checker ships with SQL helpers from namespace `\Roslov\MigrationChecker\Db`:
 - `Dumper` automatically detects the database type and dumps its schema.
     It uses `DatabaseDetector` to determine which schema dumper to use:
     - `MySqlDumper` dumps the schema for MySQL or MariaDB,
-    - `PostgreSqlDumper` dumps the schema for PostgreSQL.
+    - `PostgreSqlDumper` dumps the schema for PostgreSQL,
+    - `SqLiteDumper` dumps the schema for SQLite.
 - `SqlQuery` fetches data from SQL database via PDO connection.
 
 
@@ -193,7 +195,7 @@ final class Environment implements EnvironmentInterface
     /**
      * Cleans up the environment after migration checks.
      */
-    public function cleanup(): void
+    public function cleanUp(): void
     {
         // No-op
     }

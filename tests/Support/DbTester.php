@@ -69,6 +69,12 @@ final class DbTester extends Actor
     private const SETUP_TIMEOUT = 600;
 
     /**
+     * Additional delay for MySQL server readiness in seconds to bypass the error
+     * `SQLSTATE[HY000] [2006] MySQL server has gone away`
+     */
+    private const MYSQL_DELAY = 4;
+
+    /**
      * Returns PDO DSN.
      *
      * @param string $imageType Image type for container creation
@@ -181,6 +187,14 @@ final class DbTester extends Actor
                 sleep 1
             done
             SCRIPT;
+        if ($imageType === 'mysql') {
+            $delay = self::MYSQL_DELAY;
+            $script = <<<"SCRIPT"
+                $script
+                echo 'Waiting additional $delay seconds for MySQL server...'
+                sleep $delay
+                SCRIPT;
+        }
 
         $process = Process::fromShellCommandline($script);
         $process->setTimeout(self::READINESS_TIMEOUT);

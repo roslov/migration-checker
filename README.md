@@ -1,6 +1,11 @@
 Database Migration Checker
 ==========================
 
+[![Latest Stable Version](https://poser.pugx.org/roslov/migration-checker/v)](https://packagist.org/packages/roslov/migration-checker)
+[![Total Downloads](https://poser.pugx.org/roslov/migration-checker/downloads)](https://packagist.org/packages/roslov/migration-checker)
+[![License](https://poser.pugx.org/roslov/migration-checker/license)](https://packagist.org/packages/roslov/migration-checker)
+[![PHP Version Require](https://poser.pugx.org/roslov/migration-checker/require/php)](https://packagist.org/packages/roslov/migration-checker)
+
 Database Migration Checker validates your database migrations end-to-end. It runs each migration up and down and
 verifies that the schema after rolling back is identical to the schema before the migration was applied. This helps you
 catch migrations that leave behind tables, columns, indexes, or other schema artifacts.

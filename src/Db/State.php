@@ -35,4 +35,12 @@ final class State implements StateInterface
     {
         return trim($this->dump) === '';
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function __toString(): string
+    {
+        return $this->toString();
+    }
 }

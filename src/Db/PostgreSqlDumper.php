@@ -34,7 +34,7 @@ final class PostgreSqlDumper implements DumperInterface
                 SELECT
                     0 AS sort_order,
                     sequencename AS sort_name,
-                    'CREATE SEQUENCE IF NOT EXISTS ' || sequencename ||
+                    'CREATE SEQUENCE IF NOT EXISTS ' || quote_ident(sequencename) ||
                     ' START WITH ' || start_value ||
                     ' INCREMENT BY ' || increment_by ||
                     ' MINVALUE ' || min_value ||
@@ -42,7 +42,7 @@ final class PostgreSqlDumper implements DumperInterface
                     ' CACHE ' || cache_size ||
                     CASE WHEN cycle THEN ' CYCLE' ELSE ' NO CYCLE' END || ';' AS ddl
                 FROM pg_sequences
-                WHERE schemaname = 'public'
+                WHERE schemaname = current_schema()
 
                 UNION ALL
 
@@ -53,7 +53,7 @@ final class PostgreSqlDumper implements DumperInterface
                     pg_get_functiondef(p.oid) || ';' AS ddl
                 FROM pg_proc p
                 JOIN pg_namespace n ON n.oid = p.pronamespace
-                WHERE n.nspname = 'public'
+                WHERE n.nspname = current_schema()
                 AND p.proname NOT LIKE 'pg_%'
                 AND p.prokind = 'f'
 
@@ -66,7 +66,7 @@ final class PostgreSqlDumper implements DumperInterface
                     pg_get_functiondef(p.oid) || ';' AS ddl
                 FROM pg_proc p
                 JOIN pg_namespace n ON n.oid = p.pronamespace
-                WHERE n.nspname = 'public'
+                WHERE n.nspname = current_schema()
                 AND p.proname NOT LIKE 'pg_%'
                 AND p.prokind = 'p'
 
@@ -76,9 +76,9 @@ final class PostgreSqlDumper implements DumperInterface
                 SELECT
                     2 AS sort_order,
                     table_name AS sort_name,
-                    'CREATE TABLE IF NOT EXISTS ' || table_name || ' (' ||
+                    'CREATE TABLE IF NOT EXISTS ' || quote_ident(table_name) || ' (' ||
                     string_agg(
-                        column_name || ' ' ||
+                        quote_ident(column_name) || ' ' ||
                         data_type ||
                         CASE
                             WHEN character_maximum_length IS NOT NULL THEN '(' || character_maximum_length || ')'
@@ -95,7 +95,7 @@ final class PostgreSqlDumper implements DumperInterface
                         ', ' ORDER BY ordinal_position
                     ) || ');' AS ddl
                 FROM information_schema.columns
-                WHERE table_schema = 'public'
+                WHERE table_schema = current_schema()
                 GROUP BY table_name
 
                 UNION ALL
@@ -104,13 +104,13 @@ final class PostgreSqlDumper implements DumperInterface
                 SELECT
                     3 AS sort_order,
                     c.relname || '_' || con.conname AS sort_name,
-                    'ALTER TABLE ' || n.nspname || '.' || c.relname ||
-                    ' ADD CONSTRAINT ' || con.conname || ' ' ||
+                    'ALTER TABLE ' || quote_ident(n.nspname) || '.' || quote_ident(c.relname) ||
+                    ' ADD CONSTRAINT ' || quote_ident(con.conname) || ' ' ||
                     pg_get_constraintdef(con.oid) || ';' AS ddl
                 FROM pg_constraint con
                 JOIN pg_class c ON con.conrelid = c.oid
                 JOIN pg_namespace n ON n.oid = c.relnamespace
-                WHERE n.nspname = 'public'
+                WHERE n.nspname = current_schema()
 
                 UNION ALL
 
@@ -120,7 +120,7 @@ final class PostgreSqlDumper implements DumperInterface
                     tablename || '_' || indexname AS sort_name,
                     indexdef || ';' AS ddl
                 FROM pg_indexes
-                WHERE schemaname = 'public'
+                WHERE schemaname = current_schema()
                 AND indexname NOT LIKE '%_pkey'
 
                 UNION ALL
@@ -129,10 +129,10 @@ final class PostgreSqlDumper implements DumperInterface
                 SELECT
                     5 AS sort_order,
                     c.relname AS sort_name,
-                    'CREATE OR REPLACE VIEW ' || c.relname || ' AS ' || pg_get_viewdef(c.oid) AS ddl
+                    'CREATE OR REPLACE VIEW ' || quote_ident(c.relname) || ' AS ' || pg_get_viewdef(c.oid) AS ddl
                 FROM pg_class c
                 JOIN pg_namespace n ON n.oid = c.relnamespace
-                WHERE n.nspname = 'public' AND c.relkind = 'v'
+                WHERE n.nspname = current_schema() AND c.relkind = 'v'
 
                 UNION ALL
 
@@ -144,7 +144,7 @@ final class PostgreSqlDumper implements DumperInterface
                 FROM pg_trigger t
                 JOIN pg_class c ON t.tgrelid = c.oid
                 JOIN pg_namespace n ON c.relnamespace = n.oid
-                WHERE n.nspname = 'public' AND t.tgisinternal = FALSE
+                WHERE n.nspname = current_schema() AND t.tgisinternal = FALSE
             )
             SELECT ddl
             FROM schema_dump

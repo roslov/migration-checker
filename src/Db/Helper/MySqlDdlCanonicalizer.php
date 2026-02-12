@@ -8,8 +8,6 @@ namespace Roslov\MigrationChecker\Db\Helper;
  * Converts MySQL DDL queries to canonical ones.
  *
  * It is used for better dump comparison.
- *
- * @todo Refactor
  */
 final class MySqlDdlCanonicalizer
 {
@@ -23,19 +21,13 @@ final class MySqlDdlCanonicalizer
      */
     public function canonicalizeCreateTable(string $originalDdl): string
     {
-        $ddl = $originalDdl;
-        $ddl = str_replace("\r\n", "\n", trim($ddl));
+        $ddl = str_replace("\r\n", "\n", trim($originalDdl));
 
-        // Splits into: header "CREATE TABLE ... (", body lines, footer ") ENGINE=..."
-        if (!preg_match('/\A(.*?\(\n)(.*)(\n\)\s*.*)\z/s', $ddl, $matches)) {
-            // In case there is no newline right after "("
-            if (!preg_match('/\A(.*?\()(.*)(\)\s*.*)\z/s', $ddl, $matches2)) {
-                return $originalDdl;
-            }
-            [, $header, $body, $footer] = $matches2;
-        } else {
-            [, $header, $body, $footer] = $matches;
+        $parts = $this->splitDdl($ddl);
+        if ($parts === null) {
+            return $originalDdl;
         }
+        [$header, $body, $footer] = $parts;
 
         [$columns, $primaryKeys, $keys, $constraints, $others] = $this->extractColumnsAndKeys($body);
 
@@ -58,9 +50,30 @@ final class MySqlDdlCanonicalizer
         $out = $this->ensureCommas($out);
 
         // Normalizes footer a bit (optional): collapse whitespace
-        $footer = preg_replace('/[ \t]+/', ' ', $footer);
+        $footer = (string) preg_replace('/[ \t]+/', ' ', $footer);
 
         return $header . implode("\n", $out) . $footer;
+    }
+
+    /**
+     * Splits DDL into header, body, and footer.
+     *
+     * @param string $ddl DDL
+     *
+     * @return array{0: string, 1: string, 2: string}|null Header, body, and footer or null if not a table
+     */
+    private function splitDdl(string $ddl): ?array
+    {
+        // Splits into: header "CREATE TABLE ... (", body lines, footer ") ENGINE=..."
+        if (preg_match('/\A(.*?\(\n)(.*)(\n\)\s*.*)\z/s', $ddl, $matches)) {
+            return [$matches[1], $matches[2], $matches[3]];
+        }
+        // In case there is no newline right after "("
+        if (preg_match('/\A(.*?\()(.*)(\)\s*.*)\z/s', $ddl, $matches)) {
+            return [$matches[1], $matches[2], $matches[3]];
+        }
+
+        return null;
     }
 
     /**
@@ -75,10 +88,7 @@ final class MySqlDdlCanonicalizer
      *     3: string[],
      *     4: string[]
      * } Columns, primary keys, keys, constraints, and others
-     *
-     * @todo Decrease cognitive complexity
      */
-    // phpcs:ignore SlevomatCodingStandard.Complexity.Cognitive.ComplexityTooHigh
     private function extractColumnsAndKeys(string $body): array
     {
         $lines = $this->splitBodyLines($body);
@@ -87,43 +97,25 @@ final class MySqlDdlCanonicalizer
         $primaryKeys = [];
         $keys = [];
         $constraints = [];
-        // checks, etc. (if present). We’ll keep but sort by line
         $others = [];
 
         foreach ($lines as $line) {
             $trimmedLine = ltrim($line);
-
             if ($trimmedLine === '') {
                 continue;
             }
 
-            // Column lines usually start with a backtick: `col` ...
-            if (str_starts_with($trimmedLine, '`')) {
-                $columns[] = $this->normalizeWhitespace($line);
-
-                continue;
-            }
-
-            if (str_starts_with($trimmedLine, 'PRIMARY KEY')) {
-                $primaryKeys[] = $this->normalizeWhitespace($line);
-
-                continue;
-            }
-
-            if (preg_match('/^(UNIQUE KEY|KEY|FULLTEXT KEY|SPATIAL KEY)\s+`/i', $trimmedLine)) {
-                $keys[] = $this->normalizeWhitespace($line);
-
-                continue;
-            }
-
-            if (preg_match('/^CONSTRAINT\s+`/i', $trimmedLine)) {
-                $constraints[] = $this->normalizeWhitespace($line);
-
-                continue;
-            }
-
-            // Everything else: CHECK, etc.
-            $others[] = $this->normalizeWhitespace($line);
+            $normalizedLine = $this->normalizeWhitespace($line);
+            match (true) {
+                str_starts_with($trimmedLine, '`') => $columns[] = $normalizedLine,
+                str_starts_with($trimmedLine, 'PRIMARY KEY') => $primaryKeys[] = $normalizedLine,
+                (bool) preg_match(
+                    '/^(UNIQUE KEY|KEY|FULLTEXT KEY|SPATIAL KEY)\s+`/i',
+                    $trimmedLine,
+                ) => $keys[] = $normalizedLine,
+                (bool) preg_match('/^CONSTRAINT\s+`/i', $trimmedLine) => $constraints[] = $normalizedLine,
+                default => $others[] = $normalizedLine,
+            };
         }
 
         return [$columns, $primaryKeys, $keys, $constraints, $others];

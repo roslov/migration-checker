@@ -67,7 +67,7 @@ final class MySqlDumper implements DumperInterface
         $tables = $this->query->execute($sql, ['dbName' => $this->getDbName()]);
         $dump = [];
         foreach ($tables as $row) {
-            $sql = sprintf('SHOW CREATE TABLE `%s`', $row['table_name']);
+            $sql = sprintf('SHOW CREATE TABLE `%s`', $this->escapeIdentifier((string) $row['table_name']));
             $entry = $this->query->execute($sql)[0] ?? [];
             if (isset($entry['Create Table'])) {
                 $entry['Create Table'] = $this->canonicalizeCreateTable((string) $entry['Create Table']);
@@ -95,7 +95,7 @@ final class MySqlDumper implements DumperInterface
         $views = $this->query->execute($sql, ['dbName' => $this->getDbName()]);
         $dump = [];
         foreach ($views as $row) {
-            $sql = sprintf('SHOW CREATE VIEW `%s`', $row['table_name']);
+            $sql = sprintf('SHOW CREATE VIEW `%s`', $this->escapeIdentifier((string) $row['table_name']));
             $dump[] = $this->dumpRow($this->query->execute($sql)[0] ?? []);
         }
 
@@ -118,7 +118,7 @@ final class MySqlDumper implements DumperInterface
         $triggers = $this->query->execute($sql, ['dbName' => $this->getDbName()]);
         $dump = [];
         foreach ($triggers as $row) {
-            $sql = sprintf('SHOW CREATE TRIGGER `%s`', $row['trigger_name']);
+            $sql = sprintf('SHOW CREATE TRIGGER `%s`', $this->escapeIdentifier((string) $row['trigger_name']));
             $entry = $this->query->execute($sql)[0] ?? [];
             if (isset($entry['Created'])) {
                 unset($entry['Created']);
@@ -145,7 +145,11 @@ final class MySqlDumper implements DumperInterface
         $procedureFunctions = $this->query->execute($sql, ['dbName' => $this->getDbName()]);
         $dump = [];
         foreach ($procedureFunctions as $row) {
-            $sql = sprintf('SHOW CREATE %s `%s`', $row['routine_type'], $row['routine_name']);
+            $sql = sprintf(
+                'SHOW CREATE %s `%s`',
+                $row['routine_type'],
+                $this->escapeIdentifier((string) $row['routine_name']),
+            );
             $dump[] = $this->dumpRow($this->query->execute($sql)[0] ?? []);
         }
 
@@ -168,7 +172,7 @@ final class MySqlDumper implements DumperInterface
         $events = $this->query->execute($sql, ['dbName' => $this->getDbName()]);
         $dump = [];
         foreach ($events as $row) {
-            $sql = sprintf('SHOW CREATE EVENT `%s`', $row['event_name']);
+            $sql = sprintf('SHOW CREATE EVENT `%s`', $this->escapeIdentifier((string) $row['event_name']));
             $dump[] = $this->dumpRow($this->query->execute($sql)[0] ?? []);
         }
 
@@ -203,6 +207,18 @@ final class MySqlDumper implements DumperInterface
         }
 
         return implode("\n", $dump);
+    }
+
+    /**
+     * Escapes the identifier.
+     *
+     * @param string $identifier The identifier to escape
+     *
+     * @return string The escaped identifier
+     */
+    private function escapeIdentifier(string $identifier): string
+    {
+        return str_replace('`', '``', $identifier);
     }
 
     /**

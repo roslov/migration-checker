@@ -135,6 +135,26 @@ final class MySqlDdlCanonicalizerTest extends Unit
                     from `client`
                     SQL_WRAP,
             ],
+            'simple table' => [
+                <<<'SQL_WRAP'
+                    CREATE TABLE `t1` (
+                      `id` int(11) NOT NULL
+                    ) ENGINE=InnoDB
+                    SQL_WRAP,
+                <<<'SQL_WRAP'
+                    CREATE TABLE `t1` (
+                      `id` int(11) NOT NULL
+                    ) ENGINE=InnoDB
+                    SQL_WRAP,
+            ],
+            'table with no newline after brace' => [
+                <<<'SQL_WRAP'
+                    CREATE TABLE `t1` (`id` int(11) NOT NULL) ENGINE=InnoDB
+                    SQL_WRAP,
+                <<<'SQL_WRAP'
+                    CREATE TABLE `t1` (`id` int(11) NOT NULL) ENGINE=InnoDB
+                    SQL_WRAP,
+            ],
         ];
         // phpcs:enable Generic.Files.LineLength.TooLong
     }

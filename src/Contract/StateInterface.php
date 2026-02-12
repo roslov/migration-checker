@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Roslov\MigrationChecker\Contract;
 
+use Stringable;
+
 /**
  * Interface: Database state object.
  */
-interface StateInterface
+interface StateInterface extends Stringable
 {
     /**
      * Converts the state to a string representation.

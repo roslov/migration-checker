@@ -7,7 +7,7 @@ namespace Roslov\MigrationChecker\Db;
 use Roslov\MigrationChecker\Contract\StateInterface;
 
 /**
- * State
+ * Database state object.
  */
 final class State implements StateInterface
 {

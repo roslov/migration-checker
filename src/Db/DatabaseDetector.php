@@ -23,9 +23,14 @@ final class DatabaseDetector implements DatabaseDetectorInterface
         ['name' => DatabaseType::SqLite, 'query' => 'SELECT sqlite_version()', 'keyword' => '.'],
         ['name' => DatabaseType::SqlServer, 'query' => 'SELECT @@VERSION', 'keyword' => 'Microsoft'],
         ['name' => DatabaseType::PostgreSql, 'query' => 'SELECT version()', 'keyword' => 'PostgreSQL'],
-        ['name' => DatabaseType::MariaDd, 'query' => 'SELECT VERSION()', 'keyword' => 'MariaDB'],
+        ['name' => DatabaseType::MariaDb, 'query' => 'SELECT VERSION()', 'keyword' => 'MariaDB'],
         ['name' => DatabaseType::MySql, 'query' => 'SELECT VERSION()', 'keyword' => ''],
     ];
+
+    /**
+     * @var array{0: DatabaseType, 1: ?string}|null Cached result of type and version detection
+     */
+    private ?array $cachedTypeAndVersion = null;
 
     /**
      * Constructor.
@@ -63,14 +68,19 @@ final class DatabaseDetector implements DatabaseDetectorInterface
      */
     private function getTypeAndVersion(): array
     {
+        if ($this->cachedTypeAndVersion !== null) {
+            return $this->cachedTypeAndVersion;
+        }
+
         foreach (self::STRATEGIES as $strategy) {
             $result = $this->tryStrategy($strategy);
             if ($result !== null) {
-                return $result;
+                return $this->cachedTypeAndVersion = $result;
             }
         }
+        $this->cachedTypeAndVersion = [DatabaseType::Unknown, null];
 
-        return [DatabaseType::Unknown, null];
+        return $this->cachedTypeAndVersion;
     }
 
     /**

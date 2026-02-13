@@ -169,7 +169,7 @@ final class MigrationCheckerTest extends Unit
         $I->expect('the diff will not be displayed');
         $printer->expects(self::never())->method('displayDiff');
 
-        $I->expect('migration state will be compared unsuccessfully and diff will be displayed');
+        $I->expect('migration state will not be compared and diff will not be displayed');
         $comparer->expects(self::never())->method('statesEqual');
         $comparer->expects(self::never())->method('getPreviousState');
 

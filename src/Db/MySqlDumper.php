@@ -16,6 +16,11 @@ use Roslov\MigrationChecker\Exception\NoDatabaseUsedException;
 final class MySqlDumper implements DumperInterface
 {
     /**
+     * @var string|null Cached database name
+     */
+    private ?string $dbName = null;
+
+    /**
      * Constructor.
      *
      * @param QueryInterface $query Query fetcher
@@ -186,10 +191,17 @@ final class MySqlDumper implements DumperInterface
      */
     private function getDbName(): string
     {
+        if ($this->dbName !== null) {
+            return $this->dbName;
+        }
+
         $row = $this->query->execute('SELECT DATABASE()')[0]
         ?? throw new NoDatabaseUsedException('Use a database first.');
 
-        return (string) reset($row) ?: throw new NoDatabaseUsedException('Cannot get the database name.');
+        $this->dbName = (string) reset($row)
+            ?: throw new NoDatabaseUsedException('Cannot get the database name.');
+
+        return $this->dbName;
     }
 
     /**

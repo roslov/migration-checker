@@ -51,7 +51,7 @@ final class Dumper implements DumperInterface
 
         return match ($dbType) {
             DatabaseType::MySql,
-            DatabaseType::MariaDd => new MySqlDumper($this->query),
+            DatabaseType::MariaDb => new MySqlDumper($this->query),
             DatabaseType::PostgreSql => new PostgreSqlDumper($this->query),
             DatabaseType::SqLite => new SqLiteDumper($this->query),
             default => throw new UnknownDatabaseTypeException(

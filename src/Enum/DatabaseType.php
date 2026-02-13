@@ -17,7 +17,7 @@ enum DatabaseType: string
     /**
      * Type: MariaDB
      */
-    case MariaDd = 'MariaDB';
+    case MariaDb = 'MariaDB';
 
     /**
      * Type: PostgreSQL

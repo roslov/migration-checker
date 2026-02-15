@@ -38,10 +38,7 @@ final class DatabaseDetectorTest extends Unit
             }
 
             /**
-             * @param string $query Query to execute
-             * @param mixed[] $params Query parameters
-             *
-             * @return array<string, string>[] Query response
+             * @inheritDoc
              */
             // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClassAfterLastUsed
             public function execute(string $query, array $params = []): array

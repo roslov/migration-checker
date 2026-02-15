@@ -10,6 +10,9 @@ use Roslov\MigrationChecker\Contract\QueryInterface;
 use Roslov\MigrationChecker\Exception\DatabaseConnectionFailedException;
 use Roslov\MigrationChecker\Exception\PdoNotFoundException;
 
+use function array_values;
+use function class_exists;
+
 /**
  * Fetches data from SQL database via PDO connection.
  */
@@ -42,7 +45,7 @@ final class SqlQuery implements QueryInterface
         $stmt = $this->getPdo()->prepare($query);
         $stmt->execute($params);
 
-        return $stmt->fetchAll();
+        return array_values($stmt->fetchAll());
     }
 
     /**
